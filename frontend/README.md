@@ -1,59 +1,40 @@
 # Frontend
 
-This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 22.1.2.
+Angular 22 + Angular Material, standalone components/signals. See
+[../docs/ARCHITECTURE.md](../docs/ARCHITECTURE.md) for the intended module
+layout and [../docs/features/parent-first-registration.md](../docs/features/parent-first-registration.md)
+for the registration workflow this UI implements.
 
-## Development server
+## Run locally
 
-To start a local development server, run:
+The backend (and its dev database) must be running first — see
+[../backend/README.md](../backend/README.md). Then:
 
 ```bash
+npm install
 ng serve
 ```
 
-Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
+Open `http://localhost:4200`. The API base URL is hardcoded in
+`src/app/core/config.ts` (`http://localhost:8080/api`) — there's no
+build-time environment config yet since there's only one target.
 
-## Code scaffolding
+## Structure
 
-Angular CLI includes powerful code scaffolding tools. To generate a new component, run:
-
-```bash
-ng generate component component-name
+```text
+src/app/
+├── core/       auth service/guard/interceptor, HTTP models, API config
+├── layout/     shell (sidebar + navbar)
+└── features/   auth (login), dashboard, students, parents
 ```
 
-For a complete list of available schematics (such as `components`, `directives`, or `pipes`), run:
+Auth is stateless JWT: `AuthService` stores the token in `localStorage`
+and exposes it via signals; `authInterceptor` attaches it to every
+request and logs out on a 401.
+
+## Build / test
 
 ```bash
-ng generate --help
+ng build   # dist/frontend
+ng test    # Vitest
 ```
-
-## Building
-
-To build the project run:
-
-```bash
-ng build
-```
-
-This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
-
-## Running unit tests
-
-To execute unit tests with the [Vitest](https://vitest.dev/) test runner, use the following command:
-
-```bash
-ng test
-```
-
-## Running end-to-end tests
-
-For end-to-end (e2e) testing, run:
-
-```bash
-ng e2e
-```
-
-Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
-
-## Additional Resources
-
-For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.

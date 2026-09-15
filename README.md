@@ -37,12 +37,15 @@ cp .env.example .env
 docker compose up -d
 ```
 
-See [backend/README.md](./backend/README.md) for running and testing the
-API. Frontend setup instructions will be added once it's scaffolded.
+See [backend/README.md](./backend/README.md) for running/testing the API,
+and [frontend/README.md](./frontend/README.md) for the Angular app
+(`cd frontend && npm install && ng serve`, backend must be running first).
 
 ## Roadmap status
 
-Currently: **Sprint 2 — Students & Parents** done (CRUD, linking, search
-and pagination/filtering). Sprint 1 (auth: JWT login/refresh, roles,
-Flyway, global exception handling) also done. See the full plan for the
-sprint-by-sprint roadmap (Sprints 0–12) and long-term phases.
+Backend and frontend are in step: **Sprint 1** (auth) and **Sprint 2**
+(Students & Parents — CRUD, linking, search/pagination, both API and UI)
+are done, including a parent-first registration flow — see
+[docs/features/parent-first-registration.md](./docs/features/parent-first-registration.md).
+See the full plan for the sprint-by-sprint roadmap (Sprints 0–12) and
+long-term phases.
