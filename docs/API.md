@@ -75,6 +75,17 @@ event).
 }
 ```
 
+## Parent Slot Scheduling (public, tokenless)
+
+```http
+GET  /api/scheduling/{token}
+POST /api/scheduling/{token}/select
+```
+
+No parent account, no JWT — see the "Conventions" note below and
+[features/parent-slot-scheduling.md](./features/parent-slot-scheduling.md)
+for the full flow and security notes.
+
 ## Notes
 
 ```http
@@ -96,8 +107,9 @@ GET /api/statistics/progress
 ## Conventions (to establish in Sprint 1)
 
 - JSON request/response bodies, ISO-8601 dates/times.
-- JWT bearer auth on all endpoints except `/api/auth/login` and
-  `/api/auth/refresh`.
+- JWT bearer auth on all endpoints except `/api/auth/login`,
+  `/api/auth/refresh`, and the `/api/scheduling/{token}/*` parent-facing
+  endpoints (token-scoped instead, see above).
 - Standard error envelope + validation error format — to be defined with
   the global exception handler in Sprint 1.
 - Pagination/filtering params for list endpoints — to be defined in Sprint 2

@@ -51,7 +51,11 @@ Basic Statistics
 ```
 
 Automation in MVP: recurring follow-up generation, reminders, overdue
-detection, automatic next-appointment creation.
+detection, automatic next-appointment creation, and (per plan, opt-in)
+[parent slot scheduling](./features/parent-slot-scheduling.md) — letting a
+parent pick a convenient time from proposed slots instead of always getting
+a fixed auto-assigned time. No parent account required; access is via a
+single-use link scoped to that follow-up.
 
 **Explicitly deferred** to Phase 2 (Google/Outlook calendar, email
 notifications, parent communication, action items, advanced stats, progress
@@ -72,6 +76,9 @@ order.
 9. Parent-facing summaries never auto-expose internal notes.
 10. Calendar sync (Google/Outlook) is never the source of truth — the
     database is.
+11. An auto-confirmed fallback from an unanswered parent slot-scheduling
+    request must always surface on the staff attention list, never confirm
+    silently (see [features/parent-slot-scheduling.md](./features/parent-slot-scheduling.md)).
 
 ## Definition of done (plan §73)
 

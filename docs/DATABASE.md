@@ -15,6 +15,7 @@ student_parents
 
 follow_up_plans
 follow_ups
+follow_up_slot_options
 
 notes
 action_items
@@ -69,11 +70,15 @@ Contact method: `PHONE | EMAIL | SMS | WHATSAPP`
 id, studentId, frequencyType, interval, startDate, preferredDay,
 preferredTime, meetingDuration, assignedStaffId, parentId, location,
 meetingType, active, nextFollowUpDate, reminderSettings, createdAt,
-updatedAt
+updatedAt,
+schedulingMode, slotWindowOpenDays, slotOptionsCount, slotSelectionDeadlineHours
 ```
 
 Frequency options: Weekly, Every 2 Weeks, Monthly, Every 2 Months, Every 3
 Months, Every 6 Months, Yearly, Custom (`Every [X] days/weeks/months`).
+
+`schedulingMode`: `AUTO_FIXED | PARENT_PICKS_SLOT` (default `AUTO_FIXED`) —
+see [features/parent-slot-scheduling.md](./features/parent-slot-scheduling.md).
 
 ### FollowUp (instance)
 
@@ -82,7 +87,8 @@ id, studentId, followUpPlanId, parentId, assignedStaffId, type,
 scheduledStart, scheduledEnd, status, completedAt, completedBy, summary,
 notes, progressRating, engagementRating, parentSatisfactionRating,
 concerns, recommendations, actionItems, nextFollowUpDate, calendarEventId,
-createdAt, updatedAt
+createdAt, updatedAt,
+schedulingStatus, schedulingToken, schedulingTokenExpiresAt
 ```
 
 Type: `PARENT_MEETING | PHONE_CALL | VIDEO_CALL | IN_PERSON |
@@ -90,6 +96,20 @@ EMAIL_CHECK_IN | INTERNAL_REVIEW`
 
 Status: `SCHEDULED | CONFIRMED | COMPLETED | MISSED | CANCELLED |
 RESCHEDULED` (consider adding `OVERDUE` — see ARCHITECTURE.md overdue logic)
+
+`schedulingStatus`: `NOT_REQUIRED | AWAITING_PARENT_SELECTION | CONFIRMED |
+AUTO_CONFIRMED` — only meaningful when the plan's `schedulingMode` is
+`PARENT_PICKS_SLOT`. `schedulingToken` is stored hashed, single-use. See
+[features/parent-slot-scheduling.md](./features/parent-slot-scheduling.md).
+
+### FollowUpSlotOption
+
+Candidate time slots offered to the parent for one `FollowUp`; at most one
+per follow-up has `isSelected = true`.
+
+```text
+id, followUpId, startTime, endTime, isSelected, createdAt
+```
 
 ### ActionItem
 

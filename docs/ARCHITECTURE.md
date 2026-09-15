@@ -64,11 +64,16 @@ Daily job (Spring Scheduler in MVP; queue/job system later if needed):
 
 1. Find active follow-up plans.
 2. Generate missing upcoming follow-ups (rolling window, e.g. next 3–6 months
-   — never generate years at once).
+   — never generate years at once). For plans with
+   `schedulingMode = PARENT_PICKS_SLOT`, this generates candidate slots and a
+   scheduling link instead of a fixed time — see
+   [features/parent-slot-scheduling.md](./features/parent-slot-scheduling.md).
 3. Find tomorrow's meetings → send reminders.
 4. Find overdue follow-ups → mark overdue.
-5. Generate dashboard alerts.
-6. Sync calendar changes.
+5. Find expired parent-scheduling windows with no selection → auto-confirm
+   the plan's default time and flag for staff attention.
+6. Generate dashboard alerts.
+7. Sync calendar changes.
 
 ## Calendar sync strategy
 
@@ -121,6 +126,12 @@ hasn't completed it yet) if management needs that granularity.
 JWT auth, role-based authorization, password hashing, HTTPS, input
 validation, DB constraints, audit logging, rate limiting, secure headers.
 Never expose secrets/credentials to the frontend.
+
+Exception: the parent slot-scheduling endpoints (`/api/scheduling/{token}/*`)
+are intentionally public/tokenless, since parents have no accounts — treat
+them as their own security surface (single-use expiring tokens, rate
+limiting, minimal data exposure). See
+[features/parent-slot-scheduling.md](./features/parent-slot-scheduling.md#security-notes).
 
 ## Live updates
 
