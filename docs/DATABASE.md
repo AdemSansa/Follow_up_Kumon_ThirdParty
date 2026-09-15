@@ -1,7 +1,7 @@
 # Database Schema
 
 PostgreSQL, managed via Flyway migrations. Full rationale in
-[student_follow_up_app_full_plan.md](./student_follow_up_app_full_plan.md)
+[full-product-plan.md](./full-product-plan.md)
 §9, §11, §15, §34, §39. This file tracks the schema as it's actually built;
 keep it in sync with `backend/src/main/resources/db/migration`.
 

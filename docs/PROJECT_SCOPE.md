@@ -1,6 +1,6 @@
 # Project Scope
 
-Condensed reference derived from [student_follow_up_app_full_plan.md](./student_follow_up_app_full_plan.md).
+Condensed reference derived from [full-product-plan.md](./full-product-plan.md).
 That document is the source of truth for full detail — this file exists for
 quick lookup during implementation.
 

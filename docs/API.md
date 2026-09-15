@@ -1,6 +1,6 @@
 # API Reference
 
-REST API. Full context in [student_follow_up_app_full_plan.md](./student_follow_up_app_full_plan.md)
+REST API. Full context in [full-product-plan.md](./full-product-plan.md)
 §35–37. Endpoints will be expanded/refined during each sprint — this is the
 planned MVP surface.
 

@@ -1,6 +1,6 @@
 # Architecture
 
-Full rationale in [student_follow_up_app_full_plan.md](./student_follow_up_app_full_plan.md)
+Full rationale in [full-product-plan.md](./full-product-plan.md)
 §29–33, §40, §43–44. This file is the quick-reference version.
 
 ## System overview

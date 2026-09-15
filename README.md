@@ -4,14 +4,14 @@ Private-school management application for a Kumon-style accelerated learning
 center (Math & English). Automates recurring parent follow-ups: scheduling,
 reminders, fast check-ins, notes, statistics, and calendar management.
 
-Full product scope and roadmap: [student_follow_up_app_full_plan.md](./student_follow_up_app_full_plan.md)
+Full product scope and roadmap: [docs/full-product-plan.md](./docs/full-product-plan.md)
 
 ## Documentation
 
-- [PROJECT_SCOPE.md](./PROJECT_SCOPE.md) — objectives, modules, MVP boundaries
-- [ARCHITECTURE.md](./ARCHITECTURE.md) — system architecture, backend/frontend structure
-- [API.md](./API.md) — REST API reference
-- [DATABASE.md](./DATABASE.md) — schema and entity relationships
+- [docs/PROJECT_SCOPE.md](./docs/PROJECT_SCOPE.md) — objectives, modules, MVP boundaries
+- [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md) — system architecture, backend/frontend structure
+- [docs/API.md](./docs/API.md) — REST API reference
+- [docs/DATABASE.md](./docs/DATABASE.md) — schema and entity relationships
 
 ## Stack
 
