@@ -1,0 +1,102 @@
+<div class="student-list__header">
+  <h1>Students</h1>
+  <a mat-flat-button color="primary" routerLink="/students/new">
+    <mat-icon>add</mat-icon>
+    New student
+  </a>
+</div>
+
+<div class="student-list__filters">
+  <mat-form-field appearance="outline" class="student-list__search">
+    <mat-label>Search</mat-label>
+    <input matInput [formControl]="searchControl" placeholder="Name, phone, or parent" />
+    <mat-icon matSuffix>search</mat-icon>
+  </mat-form-field>
+
+  <mat-form-field appearance="outline">
+    <mat-label>Status</mat-label>
+    <mat-select [formControl]="statusControl">
+      <mat-option value="">All</mat-option>
+      @for (s of statuses; track s) {
+        <mat-option [value]="s">{{ s }}</mat-option>
+      }
+    </mat-select>
+  </mat-form-field>
+
+  <mat-form-field appearance="outline">
+    <mat-label>Subject</mat-label>
+    <mat-select [formControl]="subjectControl">
+      <mat-option value="">All</mat-option>
+      @for (s of subjects; track s) {
+        <mat-option [value]="s">{{ s }}</mat-option>
+      }
+    </mat-select>
+  </mat-form-field>
+</div>
+
+@if (loading()) {
+  <mat-progress-bar mode="indeterminate"></mat-progress-bar>
+}
+
+<table mat-table [dataSource]="students()" class="student-list__table">
+  <ng-container matColumnDef="name">
+    <th mat-header-cell *matHeaderCellDef>Name</th>
+    <td mat-cell *matCellDef="let s">{{ s.firstName }} {{ s.lastName }}</td>
+  </ng-container>
+
+  <ng-container matColumnDef="status">
+    <th mat-header-cell *matHeaderCellDef>Status</th>
+    <td mat-cell *matCellDef="let s">{{ s.status }}</td>
+  </ng-container>
+
+  <ng-container matColumnDef="subjects">
+    <th mat-header-cell *matHeaderCellDef>Subjects</th>
+    <td mat-cell *matCellDef="let s">
+      @for (subj of s.subjects; track subj) {
+        <mat-chip-set>
+          <mat-chip>{{ subj }}</mat-chip>
+        </mat-chip-set>
+      }
+    </td>
+  </ng-container>
+
+  <ng-container matColumnDef="level">
+    <th mat-header-cell *matHeaderCellDef>Level</th>
+    <td mat-cell *matCellDef="let s">{{ s.level || '—' }}</td>
+  </ng-container>
+
+  <ng-container matColumnDef="enrollmentDate">
+    <th mat-header-cell *matHeaderCellDef>Enrolled</th>
+    <td mat-cell *matCellDef="let s">{{ s.enrollmentDate }}</td>
+  </ng-container>
+
+  <ng-container matColumnDef="actions">
+    <th mat-header-cell *matHeaderCellDef></th>
+    <td mat-cell *matCellDef="let s">
+      <button mat-icon-button (click)="deleteStudent(s, $event)" aria-label="Delete student">
+        <mat-icon>delete</mat-icon>
+      </button>
+    </td>
+  </ng-container>
+
+  <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+  <tr
+    mat-row
+    *matRowDef="let row; columns: displayedColumns"
+    [routerLink]="['/students', row.id]"
+    class="student-list__row"
+  ></tr>
+</table>
+
+@if (!loading() && students().length === 0) {
+  <p class="student-list__empty">No students found.</p>
+}
+
+<mat-paginator
+  [length]="totalElements()"
+  [pageSize]="pageSize()"
+  [pageIndex]="pageIndex()"
+  [pageSizeOptions]="[10, 20, 50]"
+  (page)="onPage($event)"
+>
+</mat-paginator>

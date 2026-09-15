@@ -1,0 +1,33 @@
+.parent-list__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+}
+
+.parent-list__search {
+  width: 100%;
+  max-width: 400px;
+}
+
+.parent-list__search-icon {
+  cursor: pointer;
+}
+
+.parent-list__table {
+  width: 100%;
+}
+
+.parent-list__row {
+  cursor: pointer;
+}
+
+.parent-list__row:hover {
+  background: rgba(0, 0, 0, 0.03);
+}
+
+.parent-list__empty {
+  padding: 2rem 0;
+  text-align: center;
+  color: rgba(0, 0, 0, 0.5);
+}

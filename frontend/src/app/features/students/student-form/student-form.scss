@@ -1,0 +1,31 @@
+.student-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  max-width: 640px;
+}
+
+.student-form__row {
+  display: flex;
+  gap: 1rem;
+
+  mat-form-field {
+    flex: 1 1 0;
+  }
+}
+
+.student-form__full {
+  width: 100%;
+}
+
+.student-form__error {
+  color: #b3261e;
+  font-size: 0.85rem;
+}
+
+.student-form__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}

@@ -1,0 +1,40 @@
+.parent-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  max-width: 560px;
+}
+
+.parent-form__row {
+  display: flex;
+  gap: 1rem;
+
+  mat-form-field {
+    flex: 1 1 0;
+  }
+}
+
+.parent-form__full {
+  width: 100%;
+}
+
+.parent-form__error {
+  color: #b3261e;
+  font-size: 0.85rem;
+}
+
+.parent-form__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.parent-form__children {
+  margin-top: 1rem;
+  max-width: 560px;
+}
+
+.parent-form__no-children {
+  color: rgba(0, 0, 0, 0.5);
+}

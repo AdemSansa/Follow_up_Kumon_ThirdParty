@@ -1,0 +1,40 @@
+.student-list__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+}
+
+.student-list__filters {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.5rem;
+}
+
+.student-list__search {
+  min-width: 260px;
+  flex: 1 1 260px;
+}
+
+.student-list__search-icon {
+  cursor: pointer;
+}
+
+.student-list__table {
+  width: 100%;
+}
+
+.student-list__row {
+  cursor: pointer;
+}
+
+.student-list__row:hover {
+  background: rgba(0, 0, 0, 0.03);
+}
+
+.student-list__empty {
+  padding: 2rem 0;
+  text-align: center;
+  color: rgba(0, 0, 0, 0.5);
+}

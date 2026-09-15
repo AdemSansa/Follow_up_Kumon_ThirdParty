@@ -21,7 +21,7 @@ public class ParentService {
     }
 
     public Page<Parent> list(String search, Pageable pageable) {
-        return parentRepository.search(search, pageable);
+        return parentRepository.search(search != null ? search : "", pageable);
     }
 
     public Parent get(UUID id) {

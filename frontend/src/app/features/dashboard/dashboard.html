@@ -1,0 +1,36 @@
+<h1>Welcome{{ currentUser() ? ', ' + currentUser()!.firstName : '' }}</h1>
+<p class="dashboard__intro">
+  KPIs, upcoming check-ins and overdue alerts land here once Follow-Up Plans
+  (Sprint 3) exist. For now:
+</p>
+
+<div class="dashboard__cards">
+  <mat-card>
+    <mat-card-header>
+      <mat-card-title>Parents</mat-card-title>
+    </mat-card-header>
+    <mat-card-content>
+      <p>
+        Register new families here first — check-ins happen with the
+        parent, so a parent's record is where you add their child(ren)
+        from.
+      </p>
+    </mat-card-content>
+    <mat-card-actions>
+      <a mat-button color="primary" routerLink="/parents">View parents</a>
+      <a mat-button routerLink="/parents/new">Register a parent</a>
+    </mat-card-actions>
+  </mat-card>
+
+  <mat-card>
+    <mat-card-header>
+      <mat-card-title>Students</mat-card-title>
+    </mat-card-header>
+    <mat-card-content>
+      <p>Browse or search all student profiles, subjects, and status.</p>
+    </mat-card-content>
+    <mat-card-actions>
+      <a mat-button color="primary" routerLink="/students">View students</a>
+    </mat-card-actions>
+  </mat-card>
+</div>

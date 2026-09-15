@@ -36,9 +36,10 @@ public class StudentController {
     public PageResponse<StudentResponse> list(@RequestParam(required = false) StudentStatus status,
                                                @RequestParam(required = false) UUID assignedTeacherId,
                                                @RequestParam(required = false) Subject subject,
+                                               @RequestParam(required = false) UUID parentId,
                                                @RequestParam(required = false) String search,
                                                @PageableDefault(size = 20, sort = "lastName") Pageable pageable) {
-        return PageResponse.of(studentService.list(status, assignedTeacherId, subject, search, pageable)
+        return PageResponse.of(studentService.list(status, assignedTeacherId, subject, parentId, search, pageable)
                 .map(StudentResponse::from));
     }
 

@@ -21,6 +21,7 @@ import java.util.Set;
 import java.util.UUID;
 
 import static com.school.students.repository.StudentSpecifications.hasAssignedTeacher;
+import static com.school.students.repository.StudentSpecifications.hasParent;
 import static com.school.students.repository.StudentSpecifications.hasStatus;
 import static com.school.students.repository.StudentSpecifications.hasSubject;
 import static com.school.students.repository.StudentSpecifications.matchesSearch;
@@ -40,12 +41,13 @@ public class StudentService {
         this.userRepository = userRepository;
     }
 
-    public Page<Student> list(StudentStatus status, UUID assignedTeacherId, Subject subject, String search,
-                               Pageable pageable) {
+    public Page<Student> list(StudentStatus status, UUID assignedTeacherId, Subject subject, UUID parentId,
+                               String search, Pageable pageable) {
         Specification<Student> spec = Specification.allOf(
                 hasStatus(status),
                 hasAssignedTeacher(assignedTeacherId),
                 hasSubject(subject),
+                hasParent(parentId),
                 matchesSearch(search));
         return studentRepository.findAll(spec, pageable);
     }

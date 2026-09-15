@@ -1,0 +1,97 @@
+<h1>{{ isEditMode ? 'Edit parent' : 'New parent' }}</h1>
+
+@if (loading()) {
+  <mat-spinner diameter="32"></mat-spinner>
+} @else {
+  <mat-card>
+    <mat-card-content>
+      <form [formGroup]="form" (ngSubmit)="submit()" class="parent-form">
+        <div class="parent-form__row">
+          <mat-form-field appearance="outline">
+            <mat-label>First name</mat-label>
+            <input matInput formControlName="firstName" />
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>Last name</mat-label>
+            <input matInput formControlName="lastName" />
+          </mat-form-field>
+        </div>
+
+        <div class="parent-form__row">
+          <mat-form-field appearance="outline">
+            <mat-label>Phone</mat-label>
+            <input matInput formControlName="phone" />
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>Email</mat-label>
+            <input matInput type="email" formControlName="email" />
+          </mat-form-field>
+        </div>
+
+        <div class="parent-form__row">
+          <mat-form-field appearance="outline">
+            <mat-label>Relationship</mat-label>
+            <input matInput formControlName="relationship" placeholder="Mother, Father, Guardian…" />
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>Preferred contact method</mat-label>
+            <mat-select formControlName="preferredContactMethod">
+              @for (m of contactMethods; track m) {
+                <mat-option [value]="m">{{ m }}</mat-option>
+              }
+            </mat-select>
+          </mat-form-field>
+        </div>
+
+        <mat-form-field appearance="outline" class="parent-form__full">
+          <mat-label>Notes</mat-label>
+          <textarea matInput formControlName="notes" rows="3"></textarea>
+        </mat-form-field>
+
+        @if (errorMessage(); as message) {
+          <p class="parent-form__error">{{ message }}</p>
+        }
+
+        <div class="parent-form__actions">
+          <a mat-button [routerLink]="isEditMode ? ['/parents', parentId] : ['/parents']">Cancel</a>
+          <button mat-flat-button color="primary" type="submit" [disabled]="saving()">
+            {{ saving() ? 'Saving…' : 'Save' }}
+          </button>
+        </div>
+      </form>
+    </mat-card-content>
+  </mat-card>
+
+  @if (isEditMode) {
+    <mat-card class="parent-form__children">
+      <mat-card-header>
+        <mat-card-title>Children</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        @if (loadingChildren()) {
+          <mat-spinner diameter="24"></mat-spinner>
+        } @else {
+          @if (children().length === 0) {
+            <p class="parent-form__no-children">No children registered yet.</p>
+          } @else {
+            <mat-nav-list>
+              @for (child of children(); track child.id) {
+                <a mat-list-item [routerLink]="['/students', child.id]">
+                  <mat-icon matListItemIcon>school</mat-icon>
+                  <span matListItemTitle>{{ child.firstName }} {{ child.lastName }}</span>
+                  <span matListItemLine>{{ child.status }} · {{ child.subjects.join(', ') || 'No subjects yet' }}</span>
+                </a>
+              }
+            </mat-nav-list>
+          }
+        }
+      </mat-card-content>
+      <mat-card-actions>
+        <a mat-button color="primary" [routerLink]="['/students/new']" [queryParams]="{ parentId: parentId }">
+          <mat-icon>add</mat-icon>
+          Add child
+        </a>
+      </mat-card-actions>
+    </mat-card>
+  }
+}

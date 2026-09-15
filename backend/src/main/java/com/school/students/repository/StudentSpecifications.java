@@ -32,6 +32,22 @@ public final class StudentSpecifications {
         return (root, query, cb) -> subject == null ? null : cb.isMember(subject, root.get("subjects"));
     }
 
+    /**
+     * Used to list a parent's children — see docs/features/parent-first-registration.md.
+     */
+    public static Specification<Student> hasParent(UUID parentId) {
+        return (root, query, cb) -> {
+            if (parentId == null) {
+                return null;
+            }
+            if (query != null) {
+                query.distinct(true);
+            }
+            Join<Student, Parent> parents = root.join("parents", JoinType.INNER);
+            return cb.equal(parents.get("id"), parentId);
+        };
+    }
+
     public static Specification<Student> matchesSearch(String search) {
         return (root, query, cb) -> {
             if (search == null || search.isBlank()) {

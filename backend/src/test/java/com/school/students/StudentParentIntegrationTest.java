@@ -13,6 +13,7 @@ import tools.jackson.databind.node.ObjectNode;
 
 import java.util.UUID;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -99,17 +100,31 @@ class StudentParentIntegrationTest {
                 .andExpect(jsonPath("$.totalElements").value(1))
                 .andExpect(jsonPath("$.content[0].id").value(studentId));
 
-        // Filterable by subject and status.
+        // Findable as one of this parent's children (parent-first
+        // registration flow — see the "Add child" action on a parent).
         mockMvc.perform(get("/api/students")
                         .header("Authorization", authHeader())
+                        .param("parentId", parentId))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.totalElements").value(1))
+                .andExpect(jsonPath("$.content[0].id").value(studentId));
+
+        // Filterable by subject and status — scoped with the search term
+        // too, since this runs against a shared dev DB that may already
+        // hold other ACTIVE/ENGLISH students.
+        mockMvc.perform(get("/api/students")
+                        .header("Authorization", authHeader())
+                        .param("search", "BenAli")
                         .param("subject", "ENGLISH")
                         .param("status", "ACTIVE"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.totalElements").value(1));
+                .andExpect(jsonPath("$.totalElements").value(1))
+                .andExpect(jsonPath("$.content[0].id").value(studentId));
 
         // Not returned once filtered to a status it doesn't have.
         mockMvc.perform(get("/api/students")
                         .header("Authorization", authHeader())
+                        .param("search", "BenAli")
                         .param("status", "WITHDRAWN"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.totalElements").value(0));
@@ -130,6 +145,23 @@ class StudentParentIntegrationTest {
         mockMvc.perform(get("/api/students/" + studentId)
                         .header("Authorization", authHeader()))
                 .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void listsParentsWithoutASearchFilter() throws Exception {
+        // Regression test: an unfiltered list must not NPE/500 — a null
+        // search value previously made Hibernate mis-infer the JPQL
+        // parameter type. See ParentRepository.search(). Doesn't assert an
+        // exact count: this runs against a shared dev DB that may already
+        // hold other parents.
+        String parentId = createParent("Karim", "Haddad");
+
+        String response = mockMvc.perform(get("/api/parents")
+                        .header("Authorization", authHeader())
+                        .param("size", "200"))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
+        assertThat(response).contains(parentId);
     }
 
     @Test

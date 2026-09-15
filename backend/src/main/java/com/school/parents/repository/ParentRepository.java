@@ -11,7 +11,15 @@ import java.util.UUID;
 
 public interface ParentRepository extends JpaRepository<Parent, UUID> {
 
-    @Query("select p from Parent p where :search is null or "
+    /**
+     * search must never be null — pass "" for "no filter" (matches every
+     * row via the LIKE '%%' pattern below). A nullable :search bound to
+     * NULL here made Hibernate infer its JPQL parameter type as bytea
+     * (ambiguous between the "= null" check and the lower()/concat() uses),
+     * which Postgres then rejects with "function lower(bytea) does not
+     * exist" — see ParentService.list().
+     */
+    @Query("select p from Parent p where "
             + "lower(p.firstName) like lower(concat('%', :search, '%')) or "
             + "lower(p.lastName) like lower(concat('%', :search, '%')) or "
             + "p.phone like concat('%', :search, '%') or "

@@ -23,9 +23,12 @@ DELETE /api/students/{id}
 ```
 
 `GET /api/students` query params: `status`, `assignedTeacherId`, `subject`
-(`MATH`/`ENGLISH`), `search` (matches student first/last name, student
-phone, or a linked parent's first/last name/phone), plus standard Spring
-Data paging — `page`, `size`, `sort` (e.g. `sort=lastName,asc`; defaults to
+(`MATH`/`ENGLISH`), `parentId` (a parent's children — powers the "Add
+child" list on a parent's page, see
+[features/parent-first-registration.md](./features/parent-first-registration.md)),
+`search` (matches student first/last name, student phone, or a linked
+parent's first/last name/phone), plus standard Spring Data paging —
+`page`, `size`, `sort` (e.g. `sort=lastName,asc`; defaults to
 `size=20&sort=lastName`). Response is a `PageResponse` envelope: `{content,
 page, size, totalElements, totalPages}` — see the error/page envelope note
 under Conventions.

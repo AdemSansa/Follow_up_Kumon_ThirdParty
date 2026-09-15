@@ -1,0 +1,44 @@
+.shell {
+  height: 100vh;
+}
+
+.shell__sidenav {
+  width: 240px;
+  display: flex;
+  flex-direction: column;
+}
+
+.shell__brand {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 1rem;
+  font-weight: 600;
+  font-size: 1.1rem;
+}
+
+.shell__nav-active {
+  background: rgba(0, 0, 0, 0.06);
+}
+
+.shell__toolbar {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.shell__spacer {
+  flex: 1 1 auto;
+}
+
+.shell__user {
+  margin-right: 0.75rem;
+  font-size: 0.9rem;
+  opacity: 0.85;
+}
+
+.shell__content {
+  padding: 1.5rem;
+  max-width: 1200px;
+  margin: 0 auto;
+}

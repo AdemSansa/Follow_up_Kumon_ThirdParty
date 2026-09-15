@@ -2,6 +2,9 @@
 .env
 .env.local
 
+# Real student/parent data (never commit — local dev seeding only)
+local-data/
+
 # Backend (Java / Gradle / Maven)
 backend/target/
 backend/build/
