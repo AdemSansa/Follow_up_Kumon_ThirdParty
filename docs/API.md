@@ -22,6 +22,18 @@ PUT    /api/students/{id}
 DELETE /api/students/{id}
 ```
 
+`GET /api/students` query params: `status`, `assignedTeacherId`, `subject`
+(`MATH`/`ENGLISH`), `search` (matches student first/last name, student
+phone, or a linked parent's first/last name/phone), plus standard Spring
+Data paging — `page`, `size`, `sort` (e.g. `sort=lastName,asc`; defaults to
+`size=20&sort=lastName`). Response is a `PageResponse` envelope: `{content,
+page, size, totalElements, totalPages}` — see the error/page envelope note
+under Conventions.
+
+Request/response body includes `parentIds` (write) / `parents` (read,
+nested `ParentResponse[]`) to link a student to its parent(s); an unknown
+`parentIds` entry or `assignedTeacherId` is rejected with 400.
+
 ## Parents
 
 ```http
@@ -30,6 +42,9 @@ GET    /api/parents/{id}
 POST   /api/parents
 PUT    /api/parents/{id}
 ```
+
+`GET /api/parents` query params: `search` (first/last name, phone, email)
+plus the same paging params as students.
 
 ## Follow-Up Plans
 
@@ -129,5 +144,6 @@ GET /api/statistics/progress
   token, bad credentials), 403 (authenticated but not permitted), 404
   (not found), 405 (wrong HTTP method), 500 (unexpected — logged
   server-side, never leaks internal detail to the client).
-- Pagination/filtering params for list endpoints — to be defined in Sprint 2
-  (students/parents) and reused elsewhere.
+- Pagination: standard Spring Data query params (`page`, `size`, `sort`),
+  responses wrapped in the `PageResponse` envelope shown above (Students,
+  Parents) — established in Sprint 2, reused by every later list endpoint.

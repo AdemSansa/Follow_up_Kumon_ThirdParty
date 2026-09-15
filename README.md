@@ -42,6 +42,7 @@ API. Frontend setup instructions will be added once it's scaffolded.
 
 ## Roadmap status
 
-Currently: **Sprint 1 — Backend Foundation** (auth done: JWT login/refresh,
-roles, Flyway, global exception handling). See the full plan for the
+Currently: **Sprint 2 — Students & Parents** done (CRUD, linking, search
+and pagination/filtering). Sprint 1 (auth: JWT login/refresh, roles,
+Flyway, global exception handling) also done. See the full plan for the
 sprint-by-sprint roadmap (Sprints 0–12) and long-term phases.

@@ -39,9 +39,10 @@ for the API and schema.
 ./mvnw test
 ```
 
-Most tests (JWT service, auth controller slice) run without a database.
-`FollowupApplicationTests` (`@SpringBootTest`) loads the full context —
-Flyway, JPA, Security — and needs the dev database from step 1 running.
+Most auth tests (JWT service, auth controller slice) run without a
+database. `FollowupApplicationTests` and `StudentParentIntegrationTest`
+(`@SpringBootTest`) load the full context — Flyway, JPA, Security — and
+need the dev database from step 1 running.
 
 ## Auth module (Sprint 1)
 
@@ -58,3 +59,13 @@ Flyway, JPA, Security — and needs the dev database from step 1 running.
 - `/api/scheduling/**` is intentionally public/tokenless (parent
   slot-scheduling links) — see
   [../docs/features/parent-slot-scheduling.md](../docs/features/parent-slot-scheduling.md).
+
+## Students & Parents module (Sprint 2)
+
+- Full CRUD for both, plus student↔parent linking (`parentIds` on write,
+  nested `parents` on read) and pagination/filtering — see
+  [../docs/API.md](../docs/API.md).
+- `assignedTeacherId` and `parentIds` are validated to reference real
+  rows (400 if not); `subjects` is restricted to `MATH`/`ENGLISH`.
+- All endpoints require a valid bearer token (no public student/parent
+  data).

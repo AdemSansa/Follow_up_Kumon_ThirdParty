@@ -5,14 +5,12 @@ PostgreSQL, managed via Flyway migrations. Full rationale in
 §9, §11, §15, §34, §39. This file tracks the schema as it's actually built;
 keep it in sync with `backend/src/main/resources/db/migration`.
 
-## Core tables (planned)
+## Core tables
+
+Built (V1–V2): `users`, `students`, `parents`, `student_parents`,
+`student_subjects`. Planned (later sprints):
 
 ```text
-users
-students
-parents
-student_parents
-
 follow_up_plans
 follow_ups
 follow_up_slot_options
@@ -49,11 +47,22 @@ students ── follow_up_plans ── follow_ups
 
 ```text
 id, firstName, lastName, dateOfBirth, gender, phone, email, address,
-enrollmentDate, status, level, subjects, assignedTeacher, parentIds,
+enrollmentDate, status, level, subjects, assignedTeacherId, parents,
 notes, createdAt, updatedAt
 ```
 
 Status: `ACTIVE | PAUSED | INACTIVE | COMPLETED | WITHDRAWN`
+
+`subjects` is a `Set<Subject>` (`MATH | ENGLISH`), stored in its own
+`student_subjects(student_id, subject)` table (JPA `@ElementCollection`),
+not a single column — this school only teaches those two subjects (see
+docs/PROJECT_SCOPE.md), so a fixed enum was preferred over a free-text
+list. `assignedTeacherId` is a plain UUID column referencing `users.id`
+(validated in `StudentService`, not a DB foreign key with a JPA relation —
+kept as a loose reference so the students module doesn't need to depend on
+the auth module's entities). `parents` is a `@ManyToMany` via
+`student_parents`; the API writes it as `parentIds` and reads it as nested
+`ParentResponse` objects — see docs/API.md.
 
 ### Parent
 
@@ -62,7 +71,9 @@ id, firstName, lastName, phone, email, relationship,
 preferredContactMethod, notes
 ```
 
-Contact method: `PHONE | EMAIL | SMS | WHATSAPP`
+Contact method: `PHONE | EMAIL | SMS | WHATSAPP`. `relationship` is a free
+string (e.g. "Mother", "Guardian") — the plan doesn't enumerate it, unlike
+contact method.
 
 ### FollowUpPlan
 
@@ -143,7 +154,7 @@ lastSyncedAt
 ## Migration convention
 
 Flyway, versioned `V{n}__{description}.sql` under
-`backend/src/main/resources/db/migration`. First migration (Sprint 1):
-`users` + roles. Students/parents tables land in Sprint 2, follow-up
-plan/instance tables in Sprints 3–4, etc., matching the build order in
-ARCHITECTURE.md.
+`backend/src/main/resources/db/migration`. `V1` (Sprint 1): `users` +
+roles. `V2` (Sprint 2): `students`, `parents`, `student_parents`,
+`student_subjects`. Follow-up plan/instance tables land in Sprints 3–4,
+etc., matching the build order in ARCHITECTURE.md.
