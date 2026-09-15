@@ -37,10 +37,11 @@ cp .env.example .env
 docker compose up -d
 ```
 
-Backend and frontend setup instructions will be added as each is scaffolded
-(Sprint 1 and onward).
+See [backend/README.md](./backend/README.md) for running and testing the
+API. Frontend setup instructions will be added once it's scaffolded.
 
 ## Roadmap status
 
-Currently: **Sprint 0 — Planning**. See the full plan for the sprint-by-sprint
-roadmap (Sprints 0–12) and long-term phases.
+Currently: **Sprint 1 — Backend Foundation** (auth done: JWT login/refresh,
+roles, Flyway, global exception handling). See the full plan for the
+sprint-by-sprint roadmap (Sprints 0–12) and long-term phases.

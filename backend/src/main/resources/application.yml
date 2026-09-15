@@ -1,0 +1,34 @@
+spring:
+  application:
+    name: followup
+  datasource:
+    url: ${DATABASE_URL:jdbc:postgresql://localhost:5432/followup}
+    username: ${DATABASE_USERNAME:followup}
+    password: ${DATABASE_PASSWORD:changeme}
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+    properties:
+      hibernate:
+        format_sql: false
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+
+server:
+  port: ${SERVER_PORT:8080}
+
+app:
+  jwt:
+    secret: ${JWT_SECRET:changeme}
+    expiration-minutes: ${JWT_EXPIRATION_MINUTES:60}
+  bootstrap-admin:
+    email: ${ADMIN_EMAIL:admin@example.com}
+    password: ${ADMIN_PASSWORD:changeme}
+
+logging:
+  level:
+    root: INFO
+    com.school: DEBUG
+    org.springframework.security: INFO

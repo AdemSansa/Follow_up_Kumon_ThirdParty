@@ -104,13 +104,30 @@ GET /api/statistics/follow-ups
 GET /api/statistics/progress
 ```
 
-## Conventions (to establish in Sprint 1)
+## Conventions
 
 - JSON request/response bodies, ISO-8601 dates/times.
-- JWT bearer auth on all endpoints except `/api/auth/login`,
-  `/api/auth/refresh`, and the `/api/scheduling/{token}/*` parent-facing
-  endpoints (token-scoped instead, see above).
-- Standard error envelope + validation error format — to be defined with
-  the global exception handler in Sprint 1.
+- JWT bearer auth (`Authorization: Bearer <token>`) on all endpoints except
+  `/api/auth/login` and the `/api/scheduling/{token}/*` parent-facing
+  endpoints (token-scoped instead, see above). `/api/auth/refresh` requires
+  a currently-valid bearer token.
+- Error envelope (from `GlobalExceptionHandler`, `backend/src/main/java/com/school/common/exception`):
+
+  ```json
+  {
+    "timestamp": "2026-09-15T14:56:43.910338300Z",
+    "status": 400,
+    "error": "Validation Failed",
+    "message": "One or more fields are invalid",
+    "path": "/api/auth/login",
+    "fieldErrors": [{ "field": "password", "message": "must not be blank" }]
+  }
+  ```
+
+  `fieldErrors` is empty except for validation failures (400). Status codes
+  in use: 400 (validation/bad request), 401 (missing/invalid/expired
+  token, bad credentials), 403 (authenticated but not permitted), 404
+  (not found), 405 (wrong HTTP method), 500 (unexpected — logged
+  server-side, never leaks internal detail to the client).
 - Pagination/filtering params for list endpoints — to be defined in Sprint 2
   (students/parents) and reused elsewhere.
