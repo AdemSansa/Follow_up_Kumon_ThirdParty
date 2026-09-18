@@ -1,0 +1,120 @@
+<h1>{{ isEditMode ? 'Edit follow-up plan' : 'New follow-up plan' }}</h1>
+@if (studentName()) {
+  <p class="plan-form__student">For <strong>{{ studentName() }}</strong></p>
+}
+
+@if (loading()) {
+  <mat-spinner diameter="32"></mat-spinner>
+} @else {
+  <mat-card>
+    <mat-card-content>
+      <form [formGroup]="form" (ngSubmit)="submit()" class="plan-form">
+        <div class="plan-form__row">
+          <mat-form-field appearance="outline">
+            <mat-label>Frequency</mat-label>
+            <mat-select formControlName="frequencyType">
+              @for (f of frequencyTypes; track f) {
+                <mat-option [value]="f">{{ f.replaceAll('_', ' ') }}</mat-option>
+              }
+            </mat-select>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Meeting type</mat-label>
+            <mat-select formControlName="meetingType">
+              @for (m of meetingTypes; track m) {
+                <mat-option [value]="m">{{ m.replaceAll('_', ' ') }}</mat-option>
+              }
+            </mat-select>
+          </mat-form-field>
+        </div>
+
+        @if (isCustomFrequency) {
+          <div class="plan-form__row">
+            <mat-form-field appearance="outline">
+              <mat-label>Every</mat-label>
+              <input matInput type="number" min="1" formControlName="customIntervalValue" />
+            </mat-form-field>
+            <mat-form-field appearance="outline">
+              <mat-label>Unit</mat-label>
+              <mat-select formControlName="customIntervalUnit">
+                @for (u of intervalUnits; track u) {
+                  <mat-option [value]="u">{{ u }}</mat-option>
+                }
+              </mat-select>
+            </mat-form-field>
+          </div>
+        }
+
+        <div class="plan-form__row">
+          <mat-form-field appearance="outline">
+            <mat-label>Start date</mat-label>
+            <input matInput [matDatepicker]="startPicker" formControlName="startDate" />
+            <mat-datepicker-toggle matSuffix [for]="startPicker"></mat-datepicker-toggle>
+            <mat-datepicker #startPicker></mat-datepicker>
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>Duration (minutes)</mat-label>
+            <input matInput type="number" min="5" formControlName="meetingDurationMinutes" />
+          </mat-form-field>
+        </div>
+
+        <div class="plan-form__row">
+          <mat-form-field appearance="outline">
+            <mat-label>Preferred day</mat-label>
+            <mat-select formControlName="preferredDay">
+              <mat-option [value]="null">None</mat-option>
+              @for (d of daysOfWeek; track d) {
+                <mat-option [value]="d">{{ d }}</mat-option>
+              }
+            </mat-select>
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>Preferred time</mat-label>
+            <input matInput type="time" formControlName="preferredTime" />
+          </mat-form-field>
+        </div>
+
+        <div class="plan-form__row">
+          <mat-form-field appearance="outline">
+            <mat-label>Parent for this plan</mat-label>
+            <mat-select formControlName="parentId">
+              <mat-option [value]="null">Not set</mat-option>
+              @for (p of availableParents(); track p.id) {
+                <mat-option [value]="p.id">{{ p.firstName }} {{ p.lastName }}</mat-option>
+              }
+            </mat-select>
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>Location</mat-label>
+            <input matInput formControlName="location" placeholder="Center, room, or link" />
+          </mat-form-field>
+        </div>
+
+        <mat-form-field appearance="outline" class="plan-form__full">
+          <mat-label>Reminders</mat-label>
+          <mat-select formControlName="reminderOffsets" multiple>
+            @for (r of reminderOffsets; track r) {
+              <mat-option [value]="r">{{ r.replaceAll('_', ' ') }}</mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
+
+        @if (isEditMode) {
+          <mat-slide-toggle formControlName="active" class="plan-form__toggle">Active</mat-slide-toggle>
+        }
+
+        @if (errorMessage(); as message) {
+          <p class="plan-form__error">{{ message }}</p>
+        }
+
+        <div class="plan-form__actions">
+          <a mat-button [routerLink]="cancelLink">Cancel</a>
+          <button mat-flat-button color="primary" type="submit" [disabled]="saving()">
+            {{ saving() ? 'Saving…' : 'Save' }}
+          </button>
+        </div>
+      </form>
+    </mat-card-content>
+  </mat-card>
+}

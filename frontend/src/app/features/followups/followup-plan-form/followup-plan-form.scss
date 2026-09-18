@@ -1,0 +1,42 @@
+.plan-form__student {
+  color: rgba(61, 51, 111, 0.65);
+  margin-top: -0.5rem;
+  margin-bottom: 1rem;
+}
+
+.plan-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  max-width: 640px;
+}
+
+.plan-form__row {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+
+  mat-form-field {
+    flex: 1 1 220px;
+  }
+}
+
+.plan-form__full {
+  width: 100%;
+}
+
+.plan-form__toggle {
+  margin: 0.5rem 0 1rem;
+}
+
+.plan-form__error {
+  color: var(--brand-coral);
+  font-size: 0.85rem;
+}
+
+.plan-form__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}

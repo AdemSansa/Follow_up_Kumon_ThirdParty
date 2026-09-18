@@ -10,10 +10,14 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatNativeDateModule } from '@angular/material/core';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatIconModule } from '@angular/material/icon';
+import { MatListModule } from '@angular/material/list';
 import { StudentService } from '../../../core/services/student.service';
 import { ParentService } from '../../../core/services/parent.service';
+import { FollowUpPlanService } from '../../../core/services/followup-plan.service';
 import { STUDENT_STATUSES, SUBJECTS } from '../../../core/models/student.model';
 import { Parent } from '../../../core/models/parent.model';
+import { FollowUpPlan } from '../../../core/models/followup-plan.model';
 import { ApiError } from '../../../core/models/api-error.model';
 
 function toIsoDate(value: Date | string | null): string | null {
@@ -36,6 +40,8 @@ function toIsoDate(value: Date | string | null): string | null {
     MatDatepickerModule,
     MatNativeDateModule,
     MatProgressSpinnerModule,
+    MatIconModule,
+    MatListModule,
   ],
   templateUrl: './student-form.html',
   styleUrl: './student-form.scss',
@@ -44,6 +50,7 @@ export class StudentForm {
   private readonly fb = inject(FormBuilder);
   private readonly studentService = inject(StudentService);
   private readonly parentService = inject(ParentService);
+  private readonly planService = inject(FollowUpPlanService);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
 
@@ -53,6 +60,8 @@ export class StudentForm {
   readonly loading = signal(false);
   readonly saving = signal(false);
   readonly errorMessage = signal<string | null>(null);
+  readonly followUpPlans = signal<FollowUpPlan[]>([]);
+  readonly loadingPlans = signal(false);
 
   readonly studentId = this.route.snapshot.paramMap.get('id');
   readonly isEditMode = this.studentId !== null && this.studentId !== 'new';
@@ -114,9 +123,31 @@ export class StudentForm {
         });
         this.loading.set(false);
       });
+      this.loadFollowUpPlans();
     } else if (this.presetParentId) {
       this.form.patchValue({ parentIds: [this.presetParentId] });
     }
+  }
+
+  private loadFollowUpPlans(): void {
+    if (!this.studentId) return;
+    this.loadingPlans.set(true);
+    this.planService.list({ studentId: this.studentId, size: 50 }).subscribe({
+      next: (page) => {
+        this.followUpPlans.set(page.content);
+        this.loadingPlans.set(false);
+      },
+      error: () => this.loadingPlans.set(false),
+    });
+  }
+
+  deletePlan(plan: FollowUpPlan, event: Event): void {
+    event.stopPropagation();
+    event.preventDefault();
+    if (!confirm('Delete this follow-up plan? This cannot be undone.')) {
+      return;
+    }
+    this.planService.delete(plan.id).subscribe(() => this.loadFollowUpPlans());
   }
 
   submit(): void {

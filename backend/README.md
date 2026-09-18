@@ -21,11 +21,12 @@ for the API and schema.
    ./mvnw spring-boot:run
    ```
 
-3. On first startup, if the `users` table is empty, a bootstrap admin
-   account is created automatically from `ADMIN_EMAIL` / `ADMIN_PASSWORD`
-   (defaults: `admin@example.com` / `changeme`). Change its password after
-   first login — there's no self-service password change endpoint yet, so
-   for now that means updating the user directly.
+3. On first startup, if the `users` table is empty, bootstrap ADMIN and
+   STAFF accounts are created automatically — see
+   [../docs/TEST_ACCOUNTS.md](../docs/TEST_ACCOUNTS.md) for credentials.
+   Change their passwords after first login — there's no self-service
+   password change endpoint yet, so for now that means updating the user
+   directly.
 
    ```bash
    curl -X POST http://localhost:8080/api/auth/login \
@@ -69,3 +70,18 @@ need the dev database from step 1 running.
   rows (400 if not); `subjects` is restricted to `MATH`/`ENGLISH`.
 - All endpoints require a valid bearer token (no public student/parent
   data).
+
+## Follow-Up Plans module (Sprint 3)
+
+- `FollowUpPlan` is the recurrence **rule** (frequency, day/time, staff,
+  parent, duration) — not a scheduled event. Generating actual
+  occurrences from it is the Sprint 4 recurrence engine, not built yet.
+- CRUD at `/api/follow-up-plans`, filterable by `studentId`, `active`,
+  `assignedStaffId` — see [../docs/API.md](../docs/API.md).
+- `parentId`, if set, must be one of the student's own linked parents
+  (400 otherwise); `CUSTOM` frequency requires `customIntervalValue` +
+  `customIntervalUnit`.
+- `student`/`parent` associations are `EAGER` — see "Entity association
+  fetching" in [../docs/ARCHITECTURE.md](../docs/ARCHITECTURE.md) for why
+  (a real bug this sprint, only caught by manual testing — a
+  `@Transactional` integration test doesn't catch it).

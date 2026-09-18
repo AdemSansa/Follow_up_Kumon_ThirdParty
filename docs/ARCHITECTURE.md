@@ -37,6 +37,22 @@ backend/src/main/java/com/school/
 
 Controllers call services; controllers hold no scheduling/business logic.
 
+### Entity association fetching
+
+Response DTOs' `from(entity)` factory is called from the **controller**
+(`service.list(...).map(Response::from)`), i.e. after the service's
+`@Transactional` method — and therefore the Hibernate session — has
+closed. Any `@ManyToOne`/`@ManyToMany` the DTO reads must be `EAGER`, or
+mapping throws `LazyInitializationException`. This bit Sprint 3's
+`FollowUpPlan.student`/`.parent` in real use (though not the integration
+test — a `@Transactional` test wraps every request in one shared
+transaction, so the session never closes there and the same lazy proxy
+that 500s in production reads fine in the test; don't trust that test
+green-light for this specific failure mode). Stay consistent with the
+existing convention (`Student.parents`, `Student.subjects`) and default
+new entity associations read by a DTO to `EAGER` unless there's a proven
+performance reason not to.
+
 ## Frontend module layout
 
 ```text

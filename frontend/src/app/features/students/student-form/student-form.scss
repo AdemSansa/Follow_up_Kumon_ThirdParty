@@ -29,3 +29,18 @@
   gap: 0.5rem;
   margin-top: 0.5rem;
 }
+
+.student-form__plans {
+  margin-top: 1rem;
+  max-width: 640px;
+}
+
+.student-form__no-plans {
+  color: rgba(0, 0, 0, 0.5);
+}
+
+.student-form__plan-inactive {
+  color: var(--brand-coral);
+  font-weight: 600;
+  font-size: 0.8rem;
+}

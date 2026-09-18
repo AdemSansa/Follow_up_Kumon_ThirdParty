@@ -41,6 +41,16 @@ export const routes: Routes = [
         path: 'parents/:id',
         loadComponent: () => import('./features/parents/parent-form/parent-form').then((m) => m.ParentForm),
       },
+      {
+        path: 'follow-up-plans/new',
+        loadComponent: () =>
+          import('./features/followups/followup-plan-form/followup-plan-form').then((m) => m.FollowUpPlanForm),
+      },
+      {
+        path: 'follow-up-plans/:id',
+        loadComponent: () =>
+          import('./features/followups/followup-plan-form/followup-plan-form').then((m) => m.FollowUpPlanForm),
+      },
     ],
   },
   { path: '**', redirectTo: '' },

@@ -5,6 +5,7 @@
 - [ARCHITECTURE.md](./ARCHITECTURE.md) — system architecture, module layout, automation engine
 - [API.md](./API.md) — REST API reference
 - [DATABASE.md](./DATABASE.md) — schema and entity relationships
+- [TEST_ACCOUNTS.md](./TEST_ACCOUNTS.md) — local dev login credentials (bootstrap ADMIN/STAFF accounts)
 
 ## Features
 

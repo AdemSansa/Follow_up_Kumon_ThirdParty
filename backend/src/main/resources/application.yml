@@ -26,6 +26,9 @@ app:
   bootstrap-admin:
     email: ${ADMIN_EMAIL:admin@example.com}
     password: ${ADMIN_PASSWORD:changeme}
+  bootstrap-staff:
+    email: ${STAFF_EMAIL:staff@example.com}
+    password: ${STAFF_PASSWORD:changeme}
 
 logging:
   level:
