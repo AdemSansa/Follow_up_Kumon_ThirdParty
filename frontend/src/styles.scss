@@ -100,7 +100,8 @@ h3 {
 }
 
 .status-badge--inactive,
-.status-badge--withdrawn {
+.status-badge--withdrawn,
+.status-badge--overdue {
   background: rgba(240, 91, 114, 0.14);
   color: #b23b50;
 }
@@ -108,6 +109,23 @@ h3 {
 .status-badge--completed {
   background: rgba(109, 207, 246, 0.22);
   color: #1f6f8e;
+}
+
+// FollowUp-specific statuses (student status reuses the modifiers above).
+.status-badge--confirmed {
+  background: rgba(79, 184, 160, 0.18);
+  color: #1c6b5a;
+}
+
+.status-badge--rescheduled {
+  background: rgba(255, 199, 44, 0.22);
+  color: #8a6400;
+}
+
+.status-badge--missed,
+.status-badge--cancelled {
+  background: rgba(31, 31, 31, 0.08);
+  color: #5a5a5a;
 }
 
 .subject-chips {

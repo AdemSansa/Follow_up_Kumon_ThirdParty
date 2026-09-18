@@ -179,7 +179,7 @@
                       {{ followUp.status }}
                     </span>
                     @if (followUp.overdue) {
-                      <span class="status-badge status-badge--withdrawn">OVERDUE</span>
+                      <span class="status-badge status-badge--overdue">OVERDUE</span>
                     }
                   </span>
                   @if (followUp.status !== 'CANCELLED' && followUp.status !== 'COMPLETED') {

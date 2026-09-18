@@ -44,7 +44,7 @@ and [frontend/README.md](./frontend/README.md) for the Angular app
 
 ## Roadmap status
 
-Backend and frontend are in step through **Sprint 4**:
+Backend and frontend are in step through **Sprint 5**:
 
 - **Sprint 1** — auth (JWT, roles)
 - **Sprint 2** — Students & Parents (CRUD, linking, search/pagination),
@@ -55,6 +55,8 @@ Backend and frontend are in step through **Sprint 4**:
 - **Sprint 4** — the recurrence engine: turns a plan into actual scheduled
   `FollowUp` occurrences (drift-safe month-end/leap-year date math),
   overdue detection, reschedule, cancel
+- **Sprint 5** — internal calendar (day/week/month views of every
+  follow-up); no external Google/Outlook sync yet (Sprint 11)
 
 Not yet built: the check-in flow itself (rating/notes/completing a
 follow-up — Sprint 6), calendar sync, notifications, and the daily

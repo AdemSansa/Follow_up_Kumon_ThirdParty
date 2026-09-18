@@ -202,6 +202,27 @@ class FollowUpEngineIntegrationTest {
     }
 
     @Test
+    void listCanBeFilteredToACalendarDateRange() throws Exception {
+        String studentId = createStudent("Karim", "Zaidi");
+        String planId = createPlan(studentId, "MONTHLY", "2026-09-01");
+
+        // Only the Sept occurrence falls in this window; Oct's shouldn't.
+        String response = mockMvc.perform(get("/api/follow-ups")
+                        .header("Authorization", authHeader())
+                        .param("followUpPlanId", planId)
+                        .param("from", "2026-09-01")
+                        .param("to", "2026-09-30")
+                        .param("size", "20"))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
+        JsonNode content = objectMapper.readTree(response).get("content");
+
+        org.assertj.core.api.Assertions.assertThat(content.size()).isEqualTo(1);
+        org.assertj.core.api.Assertions.assertThat(content.get(0).get("scheduledStart").asText())
+                .startsWith("2026-09-01");
+    }
+
+    @Test
     void reschedulingMovesTheOccurrenceWithoutTouchingThePlan() throws Exception {
         String studentId = createStudent("Sami", "Ouazzani");
         String planId = createPlan(studentId, "MONTHLY", "2026-09-01");

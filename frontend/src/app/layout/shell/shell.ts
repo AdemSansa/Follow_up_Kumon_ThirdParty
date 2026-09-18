@@ -36,6 +36,7 @@ export class Shell {
     { path: '/dashboard', label: 'Dashboard', icon: 'dashboard' },
     { path: '/parents', label: 'Parents', icon: 'family_restroom' },
     { path: '/students', label: 'Students', icon: 'school' },
+    { path: '/calendar', label: 'Calendar', icon: 'calendar_month' },
   ];
 
   logout(): void {

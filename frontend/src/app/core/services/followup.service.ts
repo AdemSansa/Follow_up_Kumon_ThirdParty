@@ -11,6 +11,9 @@ export interface FollowUpListParams {
   status?: FollowUpStatus | '';
   assignedStaffId?: string;
   overdue?: boolean;
+  /** ISO date (YYYY-MM-DD) — inclusive calendar-day bounds. */
+  from?: string;
+  to?: string;
   page?: number;
   size?: number;
   sort?: string;

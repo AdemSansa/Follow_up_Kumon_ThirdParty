@@ -113,3 +113,13 @@ step 1 running.
 - "Overdue" is computed per-response/per-query
   (`scheduledEnd < now` + unresolved status), not a stored status —
   avoids a stored value going stale with no scheduler to refresh it yet.
+
+## Calendar (Sprint 5)
+
+No `CalendarEvent` entity or table — the internal calendar (day/week/month
+views) queries `FollowUp` directly via the new `from`/`to` date-range
+filter on `GET /api/follow-ups` (`FollowUpSpecifications.overlapsRange`).
+`calendar_events` (for external Google/Outlook sync metadata — Sprint 11)
+is still just planned, per docs/DATABASE.md; there's no need for it until
+external sync actually exists, and the internal calendar has no reason to
+duplicate data `FollowUp` already has.

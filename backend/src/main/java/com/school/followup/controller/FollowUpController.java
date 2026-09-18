@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.time.LocalDate;
 import java.util.UUID;
 
 /**
@@ -41,10 +42,12 @@ public class FollowUpController {
                                                 @RequestParam(required = false) FollowUpStatus status,
                                                 @RequestParam(required = false) UUID assignedStaffId,
                                                 @RequestParam(required = false) Boolean overdue,
+                                                @RequestParam(required = false) LocalDate from,
+                                                @RequestParam(required = false) LocalDate to,
                                                 @PageableDefault(size = 20, sort = "scheduledStart")
                                                 Pageable pageable) {
         return PageResponse.of(followUpService.list(studentId, followUpPlanId, status, assignedStaffId, overdue,
-                pageable).map(FollowUpResponse::from));
+                from, to, pageable).map(FollowUpResponse::from));
     }
 
     @GetMapping("/{id}")

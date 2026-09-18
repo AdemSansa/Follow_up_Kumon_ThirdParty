@@ -87,7 +87,10 @@ built yet — that's Sprint 6.
 `GET` query params: `studentId`, `followUpPlanId`, `status`,
 `assignedStaffId`, `overdue` (boolean — computed at query time from
 `scheduledEnd < now` and an unresolved status, not a stored status; see
-"Overdue logic" in [ARCHITECTURE.md](./ARCHITECTURE.md)), plus standard
+"Overdue logic" in [ARCHITECTURE.md](./ARCHITECTURE.md)), `from`/`to`
+(`YYYY-MM-DD`, inclusive calendar-day bounds — powers the calendar views,
+Sprint 5; matches any follow-up whose `[scheduledStart, scheduledEnd)`
+overlaps the range, not just ones that start inside it), plus standard
 paging. Every response also includes a computed `overdue` boolean.
 
 `POST /api/follow-ups` creates an ad-hoc follow-up (`followUpPlanId`

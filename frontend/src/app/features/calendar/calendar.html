@@ -1,0 +1,88 @@
+<div class="calendar__header">
+  <h1>Calendar</h1>
+
+  <div class="calendar__controls">
+    <div class="calendar__nav">
+      <button mat-icon-button (click)="previous()" aria-label="Previous">
+        <mat-icon>chevron_left</mat-icon>
+      </button>
+      <button mat-stroked-button (click)="goToday()">Today</button>
+      <button mat-icon-button (click)="next()" aria-label="Next">
+        <mat-icon>chevron_right</mat-icon>
+      </button>
+      <span class="calendar__range-label">{{ rangeLabel() }}</span>
+    </div>
+
+    <mat-button-toggle-group [value]="viewMode()" (change)="setViewMode($event.value)">
+      <mat-button-toggle value="month">Month</mat-button-toggle>
+      <mat-button-toggle value="week">Week</mat-button-toggle>
+      <mat-button-toggle value="day">Day</mat-button-toggle>
+    </mat-button-toggle-group>
+  </div>
+</div>
+
+@if (loading()) {
+  <mat-progress-bar mode="indeterminate"></mat-progress-bar>
+}
+
+@if (viewMode() === 'month') {
+  <div class="calendar__weekday-row">
+    @for (label of weekdayLabels; track label) {
+      <div class="calendar__weekday">{{ label }}</div>
+    }
+  </div>
+  <div class="calendar__month-grid">
+    @for (day of visibleDays(); track day.getTime()) {
+      <div
+        class="calendar__day-cell"
+        [class.calendar__day-cell--outside]="!isCurrentMonth(day)"
+        [class.calendar__day-cell--today]="isToday(day)"
+      >
+        <span class="calendar__day-number">{{ day.getDate() }}</span>
+        <div class="calendar__day-events">
+          @for (event of eventsFor(day).slice(0, 3); track event.id) {
+            <a
+              [routerLink]="['/students', event.student.id]"
+              class="calendar__event-chip"
+              [class]="'status-badge status-badge--' + (event.overdue ? 'overdue' : event.status.toLowerCase())"
+            >
+              {{ formatTime(event.scheduledStart) }} {{ event.student.firstName }}
+            </a>
+          }
+          @if (eventsFor(day).length > 3) {
+            <span class="calendar__more">+{{ eventsFor(day).length - 3 }} more</span>
+          }
+        </div>
+      </div>
+    }
+  </div>
+} @else {
+  <div class="calendar__agenda" [class.calendar__agenda--week]="viewMode() === 'week'">
+    @for (day of visibleDays(); track day.getTime()) {
+      <div class="calendar__agenda-day" [class.calendar__agenda-day--today]="isToday(day)">
+        <h3 class="calendar__agenda-heading">
+          {{ day.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }) }}
+        </h3>
+        @if (eventsFor(day).length === 0) {
+          <p class="calendar__agenda-empty">No follow-ups.</p>
+        } @else {
+          @for (event of eventsFor(day); track event.id) {
+            <a [routerLink]="['/students', event.student.id]" class="calendar__agenda-event">
+              <span class="calendar__agenda-time">{{ formatTime(event.scheduledStart) }}</span>
+              <span class="calendar__agenda-details">
+                <strong>{{ event.student.firstName }} {{ event.student.lastName }}</strong>
+                <span class="calendar__agenda-type">{{ event.type.replaceAll('_', ' ') }}</span>
+              </span>
+              <span
+                class="status-badge"
+                [class]="'status-badge--' + (event.overdue ? 'overdue' : event.status.toLowerCase())"
+              >
+                {{ event.overdue ? 'OVERDUE' : event.status }}
+              </span>
+            </a>
+          }
+        }
+      </div>
+    }
+  </div>
+}

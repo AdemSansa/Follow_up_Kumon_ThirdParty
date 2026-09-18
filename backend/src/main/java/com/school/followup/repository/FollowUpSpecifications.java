@@ -30,6 +30,29 @@ public final class FollowUpSpecifications {
     }
 
     /**
+     * Calendar views (day/week/month — Sprint 5) query a visible window
+     * instead of paging: any occurrence whose [scheduledStart,
+     * scheduledEnd) overlaps [from, to) is included, so a follow-up that
+     * starts before midnight and runs past it still shows up on both days.
+     */
+    public static Specification<FollowUp> overlapsRange(LocalDateTime from, LocalDateTime to) {
+        return (root, query, cb) -> {
+            if (from == null && to == null) {
+                return null;
+            }
+            Predicate startsBeforeRangeEnds = to == null ? null : cb.lessThan(root.get("scheduledStart"), to);
+            Predicate endsAfterRangeStarts = from == null ? null : cb.greaterThan(root.get("scheduledEnd"), from);
+            if (startsBeforeRangeEnds == null) {
+                return endsAfterRangeStarts;
+            }
+            if (endsAfterRangeStarts == null) {
+                return startsBeforeRangeEnds;
+            }
+            return cb.and(startsBeforeRangeEnds, endsAfterRangeStarts);
+        };
+    }
+
+    /**
      * scheduledEnd is in the past and the follow-up was never resolved —
      * see "Overdue logic" in docs/ARCHITECTURE.md. Computed at query time
      * rather than a stored status: no background job exists yet

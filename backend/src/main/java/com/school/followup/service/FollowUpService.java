@@ -19,6 +19,7 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.util.UUID;
 
 import static com.school.followup.repository.FollowUpSpecifications.hasAssignedStaff;
@@ -26,6 +27,7 @@ import static com.school.followup.repository.FollowUpSpecifications.hasPlan;
 import static com.school.followup.repository.FollowUpSpecifications.hasStatus;
 import static com.school.followup.repository.FollowUpSpecifications.hasStudent;
 import static com.school.followup.repository.FollowUpSpecifications.isOverdue;
+import static com.school.followup.repository.FollowUpSpecifications.overlapsRange;
 
 /**
  * The FollowUp instance itself: listing, ad-hoc creation, rescheduling,
@@ -49,14 +51,23 @@ public class FollowUpService {
         this.parentRepository = parentRepository;
     }
 
+    /**
+     * from/to are calendar-day bounds (inclusive on both ends from the
+     * caller's point of view) — e.g. a month view passes the first and
+     * last day of the visible grid. Converted here to a
+     * [startOfFrom, startOfDayAfterTo) instant range so a follow-up
+     * scheduled anywhere within "to" (the whole day) is still included.
+     */
     public Page<FollowUp> list(UUID studentId, UUID followUpPlanId, FollowUpStatus status, UUID assignedStaffId,
-                                Boolean overdue, Pageable pageable) {
+                                Boolean overdue, LocalDate from, LocalDate to, Pageable pageable) {
         Specification<FollowUp> spec = Specification.allOf(
                 hasStudent(studentId),
                 hasPlan(followUpPlanId),
                 hasStatus(status),
                 hasAssignedStaff(assignedStaffId),
-                isOverdue(overdue));
+                isOverdue(overdue),
+                overlapsRange(from == null ? null : from.atStartOfDay(),
+                        to == null ? null : to.plusDays(1).atStartOfDay()));
         return followUpRepository.findAll(spec, pageable);
     }
 
