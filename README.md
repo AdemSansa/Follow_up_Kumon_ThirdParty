@@ -12,6 +12,7 @@ Full product scope and roadmap: [docs/full-product-plan.md](./docs/full-product-
 - [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md) — system architecture, backend/frontend structure
 - [docs/API.md](./docs/API.md) — REST API reference
 - [docs/DATABASE.md](./docs/DATABASE.md) — schema and entity relationships
+- [docs/TEST_ACCOUNTS.md](./docs/TEST_ACCOUNTS.md) — local dev login credentials
 
 ## Stack
 
@@ -43,9 +44,15 @@ and [frontend/README.md](./frontend/README.md) for the Angular app
 
 ## Roadmap status
 
-Backend and frontend are in step: **Sprint 1** (auth) and **Sprint 2**
-(Students & Parents — CRUD, linking, search/pagination, both API and UI)
-are done, including a parent-first registration flow — see
-[docs/features/parent-first-registration.md](./docs/features/parent-first-registration.md).
+Backend and frontend are in step through **Sprint 3**:
+
+- **Sprint 1** — auth (JWT, roles)
+- **Sprint 2** — Students & Parents (CRUD, linking, search/pagination),
+  with a parent-first registration flow — see
+  [docs/features/parent-first-registration.md](./docs/features/parent-first-registration.md)
+- **Sprint 3** — Follow-Up Plans (the recurrence rule per student: CRUD,
+  frequency/schedule, reminders) — actually generating scheduled
+  occurrences from a plan is Sprint 4, not built yet
+
 See the full plan for the sprint-by-sprint roadmap (Sprints 0–12) and
 long-term phases.
