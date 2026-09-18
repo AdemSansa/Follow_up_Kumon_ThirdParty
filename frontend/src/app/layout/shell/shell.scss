@@ -1,30 +1,58 @@
 .shell {
   height: 100vh;
+  background: var(--surface-page);
 }
 
 .shell__sidenav {
-  width: 240px;
+  width: 250px;
   display: flex;
   flex-direction: column;
+  background: #ffffff;
+  border-right: 1px solid rgba(61, 51, 111, 0.08);
 }
 
 .shell__brand {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  padding: 1rem;
-  font-weight: 600;
-  font-size: 1.1rem;
+  padding: 1.25rem 1.1rem;
+}
+
+.shell__nav {
+  padding: 0.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.shell__nav-item {
+  border-radius: var(--radius-pill);
+  --mat-list-list-item-container-shape: 999px;
+  margin: 0 0.25rem;
 }
 
 .shell__nav-active {
-  background: rgba(0, 0, 0, 0.06);
+  background: linear-gradient(90deg, rgba(124, 90, 168, 0.14), rgba(124, 90, 168, 0.05));
+
+  ::ng-deep .mdc-list-item__primary-text {
+    color: var(--brand-purple);
+    font-weight: 700;
+  }
+
+  mat-icon {
+    color: var(--brand-purple);
+  }
+}
+
+.shell__body {
+  background: var(--surface-page);
 }
 
 .shell__toolbar {
   position: sticky;
   top: 0;
   z-index: 10;
+  background: #ffffff !important;
+  border-bottom: 1px solid rgba(61, 51, 111, 0.08);
 }
 
 .shell__spacer {
@@ -34,11 +62,12 @@
 .shell__user {
   margin-right: 0.75rem;
   font-size: 0.9rem;
-  opacity: 0.85;
+  font-weight: 600;
+  color: var(--brand-purple-dark);
 }
 
 .shell__content {
-  padding: 1.5rem;
+  padding: 1.75rem;
   max-width: 1200px;
   margin: 0 auto;
 }

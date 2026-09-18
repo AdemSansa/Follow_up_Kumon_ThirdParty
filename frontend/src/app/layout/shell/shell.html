@@ -1,12 +1,16 @@
 <mat-sidenav-container class="shell">
   <mat-sidenav mode="side" opened class="shell__sidenav">
     <div class="shell__brand">
-      <mat-icon>school</mat-icon>
-      <span>Follow-Up</span>
+      <app-logo />
     </div>
-    <mat-nav-list>
+    <mat-nav-list class="shell__nav">
       @for (item of navItems; track item.path) {
-        <a mat-list-item [routerLink]="item.path" routerLinkActive="shell__nav-active">
+        <a
+          mat-list-item
+          [routerLink]="item.path"
+          routerLinkActive="shell__nav-active"
+          class="shell__nav-item"
+        >
           <mat-icon matListItemIcon>{{ item.icon }}</mat-icon>
           <span matListItemTitle>{{ item.label }}</span>
         </a>
@@ -14,7 +18,7 @@
     </mat-nav-list>
   </mat-sidenav>
 
-  <mat-sidenav-content>
+  <mat-sidenav-content class="shell__body">
     <mat-toolbar class="shell__toolbar">
       <span class="shell__spacer"></span>
       @if (currentUser(); as user) {

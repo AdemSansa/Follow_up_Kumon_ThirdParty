@@ -7,6 +7,7 @@ import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatButtonModule } from '@angular/material/button';
 import { Router } from '@angular/router';
 import { AuthService } from '../../core/services/auth.service';
+import { Logo } from '../../shared/components/logo/logo';
 
 @Component({
   selector: 'app-shell',
@@ -20,6 +21,7 @@ import { AuthService } from '../../core/services/auth.service';
     MatSidenavModule,
     MatToolbarModule,
     MatButtonModule,
+    Logo,
   ],
   templateUrl: './shell.html',
   styleUrl: './shell.scss',

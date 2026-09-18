@@ -9,7 +9,6 @@ import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
-import { MatChipsModule } from '@angular/material/chips';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { debounceTime, distinctUntilChanged } from 'rxjs';
 import { StudentService } from '../../../core/services/student.service';
@@ -28,7 +27,6 @@ import { Student, STUDENT_STATUSES, StudentStatus, SUBJECTS, Subject } from '../
     MatSelectModule,
     MatButtonModule,
     MatIconModule,
-    MatChipsModule,
     MatProgressBarModule,
   ],
   templateUrl: './student-list.html',

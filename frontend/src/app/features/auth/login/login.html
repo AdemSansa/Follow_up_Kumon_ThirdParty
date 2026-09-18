@@ -1,39 +1,70 @@
 <div class="login">
-  <mat-card class="login__card">
-    <mat-card-header>
-      <mat-card-title>Student Follow-Up</mat-card-title>
-      <mat-card-subtitle>Sign in to continue</mat-card-subtitle>
-    </mat-card-header>
-    <mat-card-content>
-      <form [formGroup]="form" (ngSubmit)="submit()" class="login__form">
-        <mat-form-field appearance="outline">
-          <mat-label>Email</mat-label>
-          <input matInput type="email" formControlName="email" autocomplete="username" />
-          @if (form.controls.email.invalid && form.controls.email.touched) {
-            <mat-error>A valid email is required</mat-error>
-          }
-        </mat-form-field>
+  <section class="login__hero">
+    <svg class="login__blob login__blob--1" viewBox="0 0 200 200" aria-hidden="true">
+      <path
+        fill="var(--brand-gold)"
+        d="M45.3,-58.8C58.7,-49.6,69.4,-35.3,73.6,-19.3C77.8,-3.3,75.5,14.4,67.6,29.2C59.6,44,46,55.9,30.6,63.1C15.2,70.4,-2,73,-18.7,69.5C-35.4,66,-51.6,56.4,-61.6,42.3C-71.7,28.2,-75.6,9.5,-73.1,-7.9C-70.7,-25.3,-61.9,-41.3,-49,-50.8C-36,-60.3,-18,-63.2,-0.7,-62.2C16.7,-61.1,33.9,-56.1,45.3,-58.8Z"
+        transform="translate(100 100)"
+      />
+    </svg>
+    <svg class="login__blob login__blob--2" viewBox="0 0 200 200" aria-hidden="true">
+      <circle cx="100" cy="100" r="90" fill="var(--brand-sky)" />
+    </svg>
+    <svg class="login__blob login__blob--3" viewBox="0 0 200 200" aria-hidden="true">
+      <circle cx="100" cy="100" r="90" fill="var(--brand-teal)" />
+    </svg>
 
-        <mat-form-field appearance="outline">
-          <mat-label>Password</mat-label>
-          <input matInput type="password" formControlName="password" autocomplete="current-password" />
-          @if (form.controls.password.invalid && form.controls.password.touched) {
-            <mat-error>Password is required</mat-error>
-          }
-        </mat-form-field>
+    <div class="login__hero-content">
+      <app-logo [markSize]="52" />
+      <h1 class="login__headline">Every family,<br />one step closer.</h1>
+      <p class="login__subhead">
+        Track follow-ups, schedule check-ins, and keep every student's
+        progress in view — built for the way your center actually works.
+      </p>
+      <div class="login__sponsor">
+        <span class="login__sponsor-label">Built for</span>
+        <img src="brand/kumon-logo.png" alt="Kumon" class="login__sponsor-logo" />
+      </div>
+    </div>
+  </section>
 
-        @if (errorMessage(); as message) {
-          <p class="login__error">{{ message }}</p>
-        }
+  <section class="login__panel">
+    <mat-card class="login__card">
+      <mat-card-header>
+        <mat-card-title>Welcome back</mat-card-title>
+        <mat-card-subtitle>Sign in to continue</mat-card-subtitle>
+      </mat-card-header>
+      <mat-card-content>
+        <form [formGroup]="form" (ngSubmit)="submit()" class="login__form">
+          <mat-form-field appearance="outline">
+            <mat-label>Email</mat-label>
+            <input matInput type="email" formControlName="email" autocomplete="username" />
+            @if (form.controls.email.invalid && form.controls.email.touched) {
+              <mat-error>A valid email is required</mat-error>
+            }
+          </mat-form-field>
 
-        <button mat-flat-button color="primary" type="submit" [disabled]="loading()" class="login__submit">
-          @if (loading()) {
-            <mat-spinner diameter="20"></mat-spinner>
-          } @else {
-            Sign in
+          <mat-form-field appearance="outline">
+            <mat-label>Password</mat-label>
+            <input matInput type="password" formControlName="password" autocomplete="current-password" />
+            @if (form.controls.password.invalid && form.controls.password.touched) {
+              <mat-error>Password is required</mat-error>
+            }
+          </mat-form-field>
+
+          @if (errorMessage(); as message) {
+            <p class="login__error">{{ message }}</p>
           }
-        </button>
-      </form>
-    </mat-card-content>
-  </mat-card>
+
+          <button mat-flat-button color="primary" type="submit" [disabled]="loading()" class="login__submit">
+            @if (loading()) {
+              <mat-spinner diameter="20"></mat-spinner>
+            } @else {
+              Sign in
+            }
+          </button>
+        </form>
+      </mat-card-content>
+    </mat-card>
+  </section>
 </div>

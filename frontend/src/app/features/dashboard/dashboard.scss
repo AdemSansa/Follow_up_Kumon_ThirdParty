@@ -1,10 +1,19 @@
 .dashboard__intro {
-  color: rgba(0, 0, 0, 0.6);
+  color: rgba(61, 51, 111, 0.65);
   margin-bottom: 1.5rem;
+  max-width: 620px;
 }
 
 .dashboard__cards {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-  gap: 1rem;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 1.25rem;
+}
+
+.dashboard__cards mat-card {
+  border-top: 5px solid var(--brand-purple);
+}
+
+.dashboard__cards mat-card:nth-child(2) {
+  border-top-color: var(--brand-sky);
 }

@@ -9,6 +9,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { AuthService } from '../../../core/services/auth.service';
 import { ApiError } from '../../../core/models/api-error.model';
 import { HttpErrorResponse } from '@angular/common/http';
+import { Logo } from '../../../shared/components/logo/logo';
 
 @Component({
   selector: 'app-login',
@@ -20,6 +21,7 @@ import { HttpErrorResponse } from '@angular/common/http';
     MatFormFieldModule,
     MatInputModule,
     MatProgressSpinnerModule,
+    Logo,
   ],
   templateUrl: './login.html',
   styleUrl: './login.scss',
