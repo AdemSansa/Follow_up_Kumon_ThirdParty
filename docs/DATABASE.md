@@ -7,12 +7,11 @@ keep it in sync with `backend/src/main/resources/db/migration`.
 
 ## Core tables
 
-Built (V1–V2): `users`, `students`, `parents`, `student_parents`,
-`student_subjects`. Planned (later sprints):
+Built: `users` (V1); `students`, `parents`, `student_parents`,
+`student_subjects` (V2); `follow_up_plans`, `follow_up_plan_reminders`
+(V3); `follow_ups` (V4). Planned (later sprints):
 
 ```text
-follow_up_plans
-follow_ups
 follow_up_slot_options
 
 notes
@@ -75,43 +74,65 @@ Contact method: `PHONE | EMAIL | SMS | WHATSAPP`. `relationship` is a free
 string (e.g. "Mother", "Guardian") — the plan doesn't enumerate it, unlike
 contact method.
 
-### FollowUpPlan
+### FollowUpPlan (Sprint 3)
 
 ```text
-id, studentId, frequencyType, interval, startDate, preferredDay,
-preferredTime, meetingDuration, assignedStaffId, parentId, location,
-meetingType, active, nextFollowUpDate, reminderSettings, createdAt,
-updatedAt,
-schedulingMode, slotWindowOpenDays, slotOptionsCount, slotSelectionDeadlineHours
+id, student, parent, assignedStaffId, frequencyType, customIntervalValue,
+customIntervalUnit, startDate, preferredDay, preferredTime,
+meetingDurationMinutes, location, meetingType, active, nextFollowUpDate,
+reminderOffsets, createdAt, updatedAt
 ```
 
-Frequency options: Weekly, Every 2 Weeks, Monthly, Every 2 Months, Every 3
-Months, Every 6 Months, Yearly, Custom (`Every [X] days/weeks/months`).
+Frequency options (`frequencyType`): `WEEKLY | EVERY_2_WEEKS | MONTHLY |
+EVERY_2_MONTHS | EVERY_3_MONTHS | EVERY_6_MONTHS | YEARLY | CUSTOM` — for
+`CUSTOM`, `customIntervalValue` + `customIntervalUnit`
+(`DAYS | WEEKS | MONTHS`) are both required (validated in
+`FollowUpPlanService`). `reminderOffsets` is a `Set<ReminderOffset>`
+(`SEVEN_DAYS_BEFORE | TWENTY_FOUR_HOURS_BEFORE | TWO_HOURS_BEFORE |
+THIRTY_MINUTES_BEFORE`), stored in `follow_up_plan_reminders` — not
+actually sent anywhere yet (no notification system exists; that's Sprint
+9). `nextFollowUpDate` is computed and kept up to date by
+`FollowUpGenerationService`, not set by the client.
 
-`schedulingMode`: `AUTO_FIXED | PARENT_PICKS_SLOT` (default `AUTO_FIXED`) —
-see [features/parent-slot-scheduling.md](./features/parent-slot-scheduling.md).
+**Not yet added** (deferred until actually built, per the "no speculative
+columns" approach used throughout this schema): the parent
+slot-scheduling fields (`schedulingMode`, `slotWindowOpenDays`,
+`slotOptionsCount`, `slotSelectionDeadlineHours`) from
+[features/parent-slot-scheduling.md](./features/parent-slot-scheduling.md).
 
-### FollowUp (instance)
+### FollowUp (instance, Sprint 4)
+
+One concrete scheduled occurrence, generated from a `FollowUpPlan` by
+`FollowUpGenerationService` — see "Automation engine" in
+[ARCHITECTURE.md](./ARCHITECTURE.md).
 
 ```text
-id, studentId, followUpPlanId, parentId, assignedStaffId, type,
-scheduledStart, scheduledEnd, status, completedAt, completedBy, summary,
-notes, progressRating, engagementRating, parentSatisfactionRating,
-concerns, recommendations, actionItems, nextFollowUpDate, calendarEventId,
-createdAt, updatedAt,
-schedulingStatus, schedulingToken, schedulingTokenExpiresAt
+id, student, followUpPlan, parent, assignedStaffId, type, scheduledStart,
+scheduledEnd, status, createdAt, updatedAt
 ```
 
-Type: `PARENT_MEETING | PHONE_CALL | VIDEO_CALL | IN_PERSON |
-EMAIL_CHECK_IN | INTERNAL_REVIEW`
+`followUpPlan` is nullable — an ad-hoc follow-up need not come from a
+recurring plan. Type: `PARENT_MEETING | PHONE_CALL | VIDEO_CALL |
+IN_PERSON | EMAIL_CHECK_IN | INTERNAL_REVIEW` (copied from the plan at
+generation time, or given directly for an ad-hoc one).
 
 Status: `SCHEDULED | CONFIRMED | COMPLETED | MISSED | CANCELLED |
-RESCHEDULED` (consider adding `OVERDUE` — see ARCHITECTURE.md overdue logic)
+RESCHEDULED`. No stored `OVERDUE` status — "overdue" is computed at query
+time (`scheduledEnd < now` and an unresolved status), not persisted; see
+"Overdue logic" in [ARCHITECTURE.md](./ARCHITECTURE.md) for why (no cron
+job exists yet to keep a stored status current).
 
-`schedulingStatus`: `NOT_REQUIRED | AWAITING_PARENT_SELECTION | CONFIRMED |
-AUTO_CONFIRMED` — only meaningful when the plan's `schedulingMode` is
-`PARENT_PICKS_SLOT`. `schedulingToken` is stored hashed, single-use. See
-[features/parent-slot-scheduling.md](./features/parent-slot-scheduling.md).
+**Not yet added**: the check-in fields (`completedAt`, `completedBy`,
+`summary`, `notes`, `progressRating`, `engagementRating`,
+`parentSatisfactionRating`, `concerns`, `recommendations`, `actionItems`)
+— Sprint 6. `calendarEventId` — Sprint 5/11. The parent slot-scheduling
+fields (`schedulingStatus`, `schedulingToken`,
+`schedulingTokenExpiresAt`) — same feature doc as above, not built.
+
+`student`/`parent`/`followUpPlan` on both entities are `EAGER`-fetched —
+see "Entity association fetching" in
+[ARCHITECTURE.md](./ARCHITECTURE.md); this is a project-wide convention,
+not specific to these two entities.
 
 ### FollowUpSlotOption
 
@@ -156,5 +177,7 @@ lastSyncedAt
 Flyway, versioned `V{n}__{description}.sql` under
 `backend/src/main/resources/db/migration`. `V1` (Sprint 1): `users` +
 roles. `V2` (Sprint 2): `students`, `parents`, `student_parents`,
-`student_subjects`. Follow-up plan/instance tables land in Sprints 3–4,
-etc., matching the build order in ARCHITECTURE.md.
+`student_subjects`. `V3` (Sprint 3): `follow_up_plans`,
+`follow_up_plan_reminders`. `V4` (Sprint 4): `follow_ups`. Next up:
+notes/actions/calendar tables in Sprints 5–6, matching the build order in
+ARCHITECTURE.md.

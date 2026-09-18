@@ -40,10 +40,12 @@ for the API and schema.
 ./mvnw test
 ```
 
-Most auth tests (JWT service, auth controller slice) run without a
-database. `FollowupApplicationTests` and `StudentParentIntegrationTest`
-(`@SpringBootTest`) load the full context — Flyway, JPA, Security — and
-need the dev database from step 1 running.
+Most auth tests (JWT service, auth controller slice) and
+`RecurrenceCalculatorTest` run without a database. The `@SpringBootTest`
+classes (`FollowupApplicationTests`, `StudentParentIntegrationTest`,
+`FollowUpPlanIntegrationTest`, `FollowUpEngineIntegrationTest`) load the
+full context — Flyway, JPA, Security — and need the dev database from
+step 1 running.
 
 ## Auth module (Sprint 1)
 
@@ -85,3 +87,29 @@ need the dev database from step 1 running.
   fetching" in [../docs/ARCHITECTURE.md](../docs/ARCHITECTURE.md) for why
   (a real bug this sprint, only caught by manual testing — a
   `@Transactional` integration test doesn't catch it).
+- `DELETE` is rejected (400) once a plan has any follow-up — deactivate
+  (`PUT` with `active: false`) instead; see business rule 1.
+
+## Follow-Up recurrence engine (Sprint 4)
+
+- `RecurrenceCalculator` computes the Nth occurrence date for a plan by
+  offsetting from the plan's own `startDate` (`startDate.plus(N *
+  interval)`), never by chaining off the previously computed date — the
+  latter drifts at month-end (Jan 31 → Feb 28 → **Mar 28**, wrong) where
+  the former doesn't (Jan 31 → Feb 28 → **Mar 31**, correct). Same fix
+  handles leap-year Feb 29 correctly. See the class Javadoc and
+  `RecurrenceCalculatorTest` (12 cases, no DB needed).
+- `FollowUpGenerationService.generateUpcoming()` fills in any missing
+  occurrences up to a rolling 6-month window, runs synchronously on plan
+  create/update (no cron job yet — Sprint 7), and skips entirely for a
+  paused plan (`active: false`) or a non-`ACTIVE` student.
+  `regenerateFuture()` (called on plan update) removes not-yet-happened
+  `SCHEDULED` occurrences and regenerates them from the updated rule —
+  `CONFIRMED`/`COMPLETED`/`MISSED`/`CANCELLED`/`RESCHEDULED` rows and
+  anything already in the past are never touched.
+- `POST /api/follow-ups/{id}/reschedule` and `.../cancel` — see
+  [../docs/API.md](../docs/API.md). No `PUT`/`DELETE` on `FollowUp` by
+  design (business rule 1).
+- "Overdue" is computed per-response/per-query
+  (`scheduledEnd < now` + unresolved status), not a stored status —
+  avoids a stored value going stale with no scheduler to refresh it yet.

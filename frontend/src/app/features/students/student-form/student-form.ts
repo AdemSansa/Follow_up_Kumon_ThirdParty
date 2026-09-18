@@ -15,9 +15,11 @@ import { MatListModule } from '@angular/material/list';
 import { StudentService } from '../../../core/services/student.service';
 import { ParentService } from '../../../core/services/parent.service';
 import { FollowUpPlanService } from '../../../core/services/followup-plan.service';
+import { FollowUpService } from '../../../core/services/followup.service';
 import { STUDENT_STATUSES, SUBJECTS } from '../../../core/models/student.model';
 import { Parent } from '../../../core/models/parent.model';
 import { FollowUpPlan } from '../../../core/models/followup-plan.model';
+import { FollowUp } from '../../../core/models/followup.model';
 import { ApiError } from '../../../core/models/api-error.model';
 
 function toIsoDate(value: Date | string | null): string | null {
@@ -51,6 +53,7 @@ export class StudentForm {
   private readonly studentService = inject(StudentService);
   private readonly parentService = inject(ParentService);
   private readonly planService = inject(FollowUpPlanService);
+  private readonly followUpService = inject(FollowUpService);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
 
@@ -62,6 +65,8 @@ export class StudentForm {
   readonly errorMessage = signal<string | null>(null);
   readonly followUpPlans = signal<FollowUpPlan[]>([]);
   readonly loadingPlans = signal(false);
+  readonly upcomingFollowUps = signal<FollowUp[]>([]);
+  readonly loadingFollowUps = signal(false);
 
   readonly studentId = this.route.snapshot.paramMap.get('id');
   readonly isEditMode = this.studentId !== null && this.studentId !== 'new';
@@ -124,6 +129,7 @@ export class StudentForm {
         this.loading.set(false);
       });
       this.loadFollowUpPlans();
+      this.loadUpcomingFollowUps();
     } else if (this.presetParentId) {
       this.form.patchValue({ parentIds: [this.presetParentId] });
     }
@@ -141,13 +147,54 @@ export class StudentForm {
     });
   }
 
-  deletePlan(plan: FollowUpPlan, event: Event): void {
+  /**
+   * Plans with existing follow-ups (i.e. any plan once it's generated at
+   * least one occurrence) can't be hard-deleted — the backend rejects that
+   * to protect history. Pausing (active=false) is the supported way to
+   * stop a plan; use the plan's own edit page to fully delete one that
+   * genuinely has no follow-ups yet.
+   */
+  togglePlanActive(plan: FollowUpPlan, event: Event): void {
     event.stopPropagation();
     event.preventDefault();
-    if (!confirm('Delete this follow-up plan? This cannot be undone.')) {
+    const request = {
+      studentId: plan.student.id,
+      parentId: plan.parent?.id ?? null,
+      assignedStaffId: plan.assignedStaffId,
+      frequencyType: plan.frequencyType,
+      customIntervalValue: plan.customIntervalValue,
+      customIntervalUnit: plan.customIntervalUnit,
+      startDate: plan.startDate,
+      preferredDay: plan.preferredDay,
+      preferredTime: plan.preferredTime,
+      meetingDurationMinutes: plan.meetingDurationMinutes,
+      location: plan.location,
+      meetingType: plan.meetingType,
+      reminderOffsets: plan.reminderOffsets,
+      active: !plan.active,
+    };
+    this.planService.update(plan.id, request).subscribe(() => this.loadFollowUpPlans());
+  }
+
+  private loadUpcomingFollowUps(): void {
+    if (!this.studentId) return;
+    this.loadingFollowUps.set(true);
+    this.followUpService.list({ studentId: this.studentId, size: 10, sort: 'scheduledStart,asc' }).subscribe({
+      next: (page) => {
+        this.upcomingFollowUps.set(page.content);
+        this.loadingFollowUps.set(false);
+      },
+      error: () => this.loadingFollowUps.set(false),
+    });
+  }
+
+  cancelFollowUp(followUp: FollowUp, event: Event): void {
+    event.stopPropagation();
+    event.preventDefault();
+    if (!confirm('Cancel this follow-up occurrence?')) {
       return;
     }
-    this.planService.delete(plan.id).subscribe(() => this.loadFollowUpPlans());
+    this.followUpService.cancel(followUp.id).subscribe(() => this.loadUpcomingFollowUps());
   }
 
   submit(): void {

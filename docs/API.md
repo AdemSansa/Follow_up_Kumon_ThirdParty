@@ -49,7 +49,7 @@ PUT    /api/parents/{id}
 `GET /api/parents` query params: `search` (first/last name, phone, email)
 plus the same paging params as students.
 
-## Follow-Up Plans
+## Follow-Up Plans (Sprint 3)
 
 ```http
 GET    /api/follow-up-plans
@@ -59,25 +59,56 @@ PUT    /api/follow-up-plans/{id}
 DELETE /api/follow-up-plans/{id}
 ```
 
-## Follow-Ups
+`GET` query params: `studentId`, `active`, `assignedStaffId`, plus standard
+paging.
+
+Creating or updating a plan synchronously generates/regenerates its
+`FollowUp` occurrences (see below) — no cron job exists yet (Sprint 7).
+`DELETE` is rejected with 400 once a plan has any follow-up (any status):
+deactivate it instead (`PUT` with `active: false`) — see business rule 1,
+[PROJECT_SCOPE.md](./PROJECT_SCOPE.md). `parentId`, if set, must be one of
+the student's own linked parents.
+
+## Follow-Ups (Sprint 4 — the generated occurrences)
 
 ```http
 GET    /api/follow-ups
 GET    /api/follow-ups/{id}
 POST   /api/follow-ups
-PUT    /api/follow-ups/{id}
-POST   /api/follow-ups/{id}/complete
 POST   /api/follow-ups/{id}/reschedule
 POST   /api/follow-ups/{id}/cancel
 ```
 
-### Check-in completion payload
+No `PUT` (general edit) or `DELETE` — history is never rewritten wholesale
+or hard-deleted (business rule 1); `reschedule` and `cancel` are the only
+mutations. `POST /api/follow-ups/{id}/complete` (the check-in flow) isn't
+built yet — that's Sprint 6.
 
-`POST /api/follow-ups/{id}/complete` — the core automation trigger, must run
-transactionally end-to-end (validate → save ratings/notes/concerns → create
-action items → mark COMPLETED → compute + create next occurrence → create
-calendar event → schedule reminders → update statistics → publish realtime
-event).
+`GET` query params: `studentId`, `followUpPlanId`, `status`,
+`assignedStaffId`, `overdue` (boolean — computed at query time from
+`scheduledEnd < now` and an unresolved status, not a stored status; see
+"Overdue logic" in [ARCHITECTURE.md](./ARCHITECTURE.md)), plus standard
+paging. Every response also includes a computed `overdue` boolean.
+
+`POST /api/follow-ups` creates an ad-hoc follow-up (`followUpPlanId`
+optional — not every follow-up has to come from a recurring plan).
+
+`POST /api/follow-ups/{id}/reschedule` (body: `scheduledStart`,
+`scheduledEnd`) moves one occurrence and sets its status to `RESCHEDULED`
+— it never touches the plan (business rule 3). Rejected (400) if the
+follow-up is already `CANCELLED` or `COMPLETED`.
+
+`POST /api/follow-ups/{id}/cancel` sets status to `CANCELLED`; rejected
+(400) if already `COMPLETED`.
+
+### Check-in completion payload (not built yet — Sprint 6)
+
+`POST /api/follow-ups/{id}/complete` will be the core automation trigger,
+running transactionally end-to-end (validate → save ratings/notes/concerns
+→ create action items → mark COMPLETED → compute + create next occurrence
+→ create calendar event → schedule reminders → update statistics →
+publish realtime event). Documented here as the target shape; not
+implemented.
 
 ```json
 {

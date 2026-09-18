@@ -25,8 +25,15 @@ build-time environment config yet since there's only one target.
 src/app/
 ├── core/       auth service/guard/interceptor, HTTP models, API config
 ├── layout/     shell (sidebar + navbar)
-└── features/   auth (login), dashboard, students, parents
+├── shared/     Logo brand mark
+└── features/   auth (login), dashboard, students, parents, followups
 ```
+
+`features/followups` covers both Follow-Up Plans (the recurrence rule —
+create/edit form) and the generated FollowUp occurrences (reschedule
+form). Both are surfaced from the student page, not as their own
+top-level nav item yet — a plan's "New follow-up plan" / a student's
+"Upcoming Follow-Ups" list is the only way to reach them.
 
 Auth is stateless JWT: `AuthService` stores the token in `localStorage`
 and exposes it via signals; `authInterceptor` attaches it to every

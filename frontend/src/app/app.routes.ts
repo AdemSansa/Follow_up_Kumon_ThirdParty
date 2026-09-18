@@ -51,6 +51,13 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./features/followups/followup-plan-form/followup-plan-form').then((m) => m.FollowUpPlanForm),
       },
+      {
+        path: 'follow-ups/:id/reschedule',
+        loadComponent: () =>
+          import('./features/followups/followup-reschedule/followup-reschedule').then(
+            (m) => m.FollowUpReschedule,
+          ),
+      },
     ],
   },
   { path: '**', redirectTo: '' },

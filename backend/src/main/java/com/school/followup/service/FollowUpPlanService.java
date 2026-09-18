@@ -7,6 +7,7 @@ import com.school.followup.dto.FollowUpPlanRequest;
 import com.school.followup.model.FollowUpPlan;
 import com.school.followup.model.FrequencyType;
 import com.school.followup.repository.FollowUpPlanRepository;
+import com.school.followup.repository.FollowUpRepository;
 import com.school.parents.model.Parent;
 import com.school.parents.repository.ParentRepository;
 import com.school.students.model.Student;
@@ -32,13 +33,18 @@ public class FollowUpPlanService {
     private final StudentRepository studentRepository;
     private final ParentRepository parentRepository;
     private final UserRepository userRepository;
+    private final FollowUpRepository followUpRepository;
+    private final FollowUpGenerationService generationService;
 
     public FollowUpPlanService(FollowUpPlanRepository followUpPlanRepository, StudentRepository studentRepository,
-                                ParentRepository parentRepository, UserRepository userRepository) {
+                                ParentRepository parentRepository, UserRepository userRepository,
+                                FollowUpRepository followUpRepository, FollowUpGenerationService generationService) {
         this.followUpPlanRepository = followUpPlanRepository;
         this.studentRepository = studentRepository;
         this.parentRepository = parentRepository;
         this.userRepository = userRepository;
+        this.followUpRepository = followUpRepository;
+        this.generationService = generationService;
     }
 
     public Page<FollowUpPlan> list(UUID studentId, Boolean active, UUID assignedStaffId, Pageable pageable) {
@@ -71,7 +77,9 @@ public class FollowUpPlanService {
         if (request.active() != null) {
             plan.setActive(request.active());
         }
-        return followUpPlanRepository.save(plan);
+        plan = followUpPlanRepository.save(plan);
+        generationService.generateUpcoming(plan);
+        return plan;
     }
 
     @Transactional
@@ -99,12 +107,18 @@ public class FollowUpPlanService {
         if (request.active() != null) {
             plan.setActive(request.active());
         }
+        generationService.regenerateFuture(plan);
         return plan;
     }
 
     @Transactional
     public void delete(UUID id) {
         FollowUpPlan plan = get(id);
+        if (followUpRepository.existsByFollowUpPlanId(id)) {
+            throw new BadRequestException(
+                    "Cannot delete a follow-up plan with existing follow-ups — deactivate it instead "
+                            + "(PUT with active=false) to preserve history.");
+        }
         followUpPlanRepository.delete(plan);
     }
 

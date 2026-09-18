@@ -137,10 +137,10 @@
                   <button
                     mat-icon-button
                     matListItemMeta
-                    (click)="deletePlan(plan, $event)"
-                    aria-label="Delete follow-up plan"
+                    (click)="togglePlanActive(plan, $event)"
+                    [attr.aria-label]="plan.active ? 'Pause follow-up plan' : 'Resume follow-up plan'"
                   >
-                    <mat-icon>delete</mat-icon>
+                    <mat-icon>{{ plan.active ? 'pause_circle' : 'play_circle' }}</mat-icon>
                   </button>
                 </a>
               }
@@ -154,6 +154,50 @@
           New follow-up plan
         </a>
       </mat-card-actions>
+    </mat-card>
+
+    <mat-card class="student-form__followups">
+      <mat-card-header>
+        <mat-card-title>Upcoming Follow-Ups</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        @if (loadingFollowUps()) {
+          <mat-spinner diameter="24"></mat-spinner>
+        } @else {
+          @if (upcomingFollowUps().length === 0) {
+            <p class="student-form__no-plans">No follow-ups yet — add a follow-up plan above to generate some.</p>
+          } @else {
+            <mat-nav-list>
+              @for (followUp of upcomingFollowUps(); track followUp.id) {
+                <a mat-list-item [routerLink]="['/follow-ups', followUp.id, 'reschedule']">
+                  <mat-icon matListItemIcon>event</mat-icon>
+                  <span matListItemTitle>
+                    {{ followUp.scheduledStart.replace('T', ' ') }} · {{ followUp.type.replaceAll('_', ' ') }}
+                  </span>
+                  <span matListItemLine>
+                    <span class="status-badge" [class]="'status-badge--' + followUp.status.toLowerCase()">
+                      {{ followUp.status }}
+                    </span>
+                    @if (followUp.overdue) {
+                      <span class="status-badge status-badge--withdrawn">OVERDUE</span>
+                    }
+                  </span>
+                  @if (followUp.status !== 'CANCELLED' && followUp.status !== 'COMPLETED') {
+                    <button
+                      mat-icon-button
+                      matListItemMeta
+                      (click)="cancelFollowUp(followUp, $event)"
+                      aria-label="Cancel follow-up"
+                    >
+                      <mat-icon>event_busy</mat-icon>
+                    </button>
+                  }
+                </a>
+              }
+            </mat-nav-list>
+          }
+        }
+      </mat-card-content>
     </mat-card>
   }
 }
