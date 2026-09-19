@@ -1,0 +1,111 @@
+<h1>Check-in</h1>
+
+@if (loading()) {
+  <mat-spinner diameter="32"></mat-spinner>
+} @else if (followUp(); as fu) {
+  <p class="checkin__context">
+    <strong>{{ fu.student.firstName }} {{ fu.student.lastName }}</strong>
+    · {{ fu.type.replaceAll('_', ' ') }}
+    · {{ fu.scheduledStart.replace('T', ' ').slice(0, 16) }}
+    @if (fu.parent) {
+      · with {{ fu.parent.firstName }} {{ fu.parent.lastName }}
+    }
+  </p>
+
+  @if (fu.status === 'COMPLETED' || fu.status === 'CANCELLED') {
+    <mat-card>
+      <mat-card-content>
+        <p>This follow-up is already {{ fu.status }} — it can't be checked in again.</p>
+        <a mat-button [routerLink]="cancelLink">Back</a>
+      </mat-card-content>
+    </mat-card>
+  } @else {
+    <mat-card>
+      <mat-card-content>
+        <form [formGroup]="form" (ngSubmit)="submit()" class="checkin__form">
+          <div class="checkin__rating">
+            <span class="checkin__label">Progress</span>
+            <app-star-rating formControlName="progressRating" />
+          </div>
+          <div class="checkin__rating">
+            <span class="checkin__label">Student engagement</span>
+            <app-star-rating formControlName="engagementRating" />
+          </div>
+          <div class="checkin__rating">
+            <span class="checkin__label">Parent satisfaction</span>
+            <app-star-rating formControlName="parentSatisfactionRating" />
+          </div>
+
+          <div class="checkin__concerns">
+            <span class="checkin__label">Concerns</span>
+            <div class="checkin__concern-list">
+              @for (concern of concernOptions; track concern) {
+                <mat-checkbox
+                  [checked]="selectedConcerns().has(concern)"
+                  (change)="toggleConcern(concern, $event.checked)"
+                >
+                  {{ concern.charAt(0) + concern.slice(1).toLowerCase() }}
+                </mat-checkbox>
+              }
+              <mat-checkbox [checked]="noConcerns" (change)="setNone($event.checked)">None</mat-checkbox>
+            </div>
+          </div>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Quick note</mat-label>
+            <textarea matInput formControlName="summary" rows="2"></textarea>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Recommendation</mat-label>
+            <textarea matInput formControlName="recommendations" rows="2"></textarea>
+          </mat-form-field>
+
+          <mat-slide-toggle
+            formControlName="actionRequired"
+            (change)="onActionRequiredChange($event.checked)"
+          >
+            Action required
+          </mat-slide-toggle>
+
+          @for (item of actionItems.controls; track $index) {
+            <div class="checkin__action" [formGroup]="item">
+              <mat-form-field appearance="outline" class="checkin__action-title">
+                <mat-label>Action</mat-label>
+                <input matInput formControlName="title" />
+              </mat-form-field>
+              <mat-form-field appearance="outline">
+                <mat-label>Due</mat-label>
+                <input matInput type="date" formControlName="dueDate" />
+              </mat-form-field>
+              <button mat-icon-button type="button" (click)="removeActionItem($index)" aria-label="Remove action">
+                <mat-icon>close</mat-icon>
+              </button>
+            </div>
+          }
+          @if (form.controls.actionRequired.value) {
+            <button mat-button type="button" (click)="addActionItem()" class="checkin__add-action">
+              <mat-icon>add</mat-icon>
+              Add another action
+            </button>
+          }
+
+          @if (errorMessage(); as message) {
+            <p class="checkin__error">{{ message }}</p>
+          }
+
+          <div class="checkin__actions">
+            <a mat-button [routerLink]="cancelLink">Cancel</a>
+            <button mat-flat-button color="primary" type="submit" [disabled]="saving()" class="checkin__complete">
+              {{ saving() ? 'Saving…' : 'Complete check-in' }}
+            </button>
+          </div>
+        </form>
+      </mat-card-content>
+    </mat-card>
+  }
+} @else {
+  @if (errorMessage(); as message) {
+    <p class="checkin__error">{{ message }}</p>
+  }
+}

@@ -44,7 +44,7 @@ and [frontend/README.md](./frontend/README.md) for the Angular app
 
 ## Roadmap status
 
-Backend and frontend are in step through **Sprint 5**:
+Backend and frontend are in step through **Sprint 6**:
 
 - **Sprint 1** — auth (JWT, roles)
 - **Sprint 2** — Students & Parents (CRUD, linking, search/pagination),
@@ -57,9 +57,12 @@ Backend and frontend are in step through **Sprint 5**:
   overdue detection, reschedule, cancel
 - **Sprint 5** — internal calendar (day/week/month views of every
   follow-up); no external Google/Outlook sync yet (Sprint 11)
+- **Sprint 6** — the fast check-in flow: 1–5 star ratings, concern
+  checkboxes, quick note, recommendation, optional action items, and a
+  transactional `POST /api/follow-ups/{id}/complete`; action items are
+  listed (and can be marked done) on the student page
 
-Not yet built: the check-in flow itself (rating/notes/completing a
-follow-up — Sprint 6), calendar sync, notifications, and the daily
+Not yet built: Smart Check-In, calendar sync, notifications, and the daily
 automation job that would otherwise keep occurrences generating without
 someone editing a plan (Sprint 7). See the full plan for the
 sprint-by-sprint roadmap (Sprints 0–12) and long-term phases.

@@ -77,12 +77,12 @@ GET    /api/follow-ups/{id}
 POST   /api/follow-ups
 POST   /api/follow-ups/{id}/reschedule
 POST   /api/follow-ups/{id}/cancel
+POST   /api/follow-ups/{id}/complete
 ```
 
 No `PUT` (general edit) or `DELETE` — history is never rewritten wholesale
-or hard-deleted (business rule 1); `reschedule` and `cancel` are the only
-mutations. `POST /api/follow-ups/{id}/complete` (the check-in flow) isn't
-built yet — that's Sprint 6.
+or hard-deleted (business rule 1); `reschedule`, `cancel` and `complete`
+(the check-in flow, Sprint 6) are the only mutations.
 
 `GET` query params: `studentId`, `followUpPlanId`, `status`,
 `assignedStaffId`, `overdue` (boolean — computed at query time from
@@ -104,28 +104,47 @@ follow-up is already `CANCELLED` or `COMPLETED`.
 `POST /api/follow-ups/{id}/cancel` sets status to `CANCELLED`; rejected
 (400) if already `COMPLETED`.
 
-### Check-in completion payload (not built yet — Sprint 6)
+### Check-in completion (Sprint 6)
 
-`POST /api/follow-ups/{id}/complete` will be the core automation trigger,
-running transactionally end-to-end (validate → save ratings/notes/concerns
-→ create action items → mark COMPLETED → compute + create next occurrence
-→ create calendar event → schedule reminders → update statistics →
-publish realtime event). Documented here as the target shape; not
-implemented.
+`POST /api/follow-ups/{id}/complete` runs in one transaction: validate →
+save ratings/notes/concerns → create action items → mark `COMPLETED`
+(`completedAt`, `completedBy` = the calling user) → top up the plan's
+rolling window of future occurrences. Rejected (400) if the follow-up is
+already `COMPLETED` or `CANCELLED`, if a rating is outside 1–5 (the
+`fieldErrors` entry names the field), or if an action item's `assignedTo`
+is not a known user — in every failure case nothing is saved.
+
+Not implemented yet from the plan's §37 chain: calendar event creation,
+reminder scheduling, statistics updates and the realtime event. `notes`
+on a follow-up is reserved; the quick note is stored as `summary`.
 
 ```json
 {
   "progressRating": 4,
   "engagementRating": 5,
   "parentSatisfactionRating": 4,
-  "concerns": ["HOMEWORK"],
+  "concerns": ["HOMEWORK"],  // empty array = "None"
   "summary": "Good progress this month.",
   "recommendations": "Continue regular practice.",
   "actionItems": [
-    { "title": "Monitor homework", "dueDate": "2026-10-01" }
+    { "title": "Monitor homework", "dueDate": "2026-10-01", "priority": "MEDIUM", "assignedTo": null }
   ]
 }
 ```
+
+Concerns: `ATTENDANCE | HOMEWORK | MOTIVATION | PROGRESS | BEHAVIOR`.
+
+## Action Items (Sprint 6)
+
+```http
+GET  /api/action-items
+POST /api/action-items/{id}/complete
+```
+
+`GET` filters: `studentId`, `followUpId`, `status`
+(`TODO | IN_PROGRESS | DONE | CANCELLED`), `assignedTo`, plus paging. Items
+are created only through the check-in payload above; `complete` marks one
+`DONE` and stamps `completedAt`.
 
 ## Parent Slot Scheduling (public, tokenless)
 

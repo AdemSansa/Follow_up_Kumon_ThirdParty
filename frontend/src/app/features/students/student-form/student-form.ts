@@ -16,6 +16,8 @@ import { StudentService } from '../../../core/services/student.service';
 import { ParentService } from '../../../core/services/parent.service';
 import { FollowUpPlanService } from '../../../core/services/followup-plan.service';
 import { FollowUpService } from '../../../core/services/followup.service';
+import { ActionItemService } from '../../../core/services/action-item.service';
+import { ActionItem } from '../../../core/models/action-item.model';
 import { STUDENT_STATUSES, SUBJECTS } from '../../../core/models/student.model';
 import { Parent } from '../../../core/models/parent.model';
 import { FollowUpPlan } from '../../../core/models/followup-plan.model';
@@ -54,6 +56,7 @@ export class StudentForm {
   private readonly parentService = inject(ParentService);
   private readonly planService = inject(FollowUpPlanService);
   private readonly followUpService = inject(FollowUpService);
+  private readonly actionItemService = inject(ActionItemService);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
 
@@ -67,6 +70,7 @@ export class StudentForm {
   readonly loadingPlans = signal(false);
   readonly upcomingFollowUps = signal<FollowUp[]>([]);
   readonly loadingFollowUps = signal(false);
+  readonly actionItems = signal<ActionItem[]>([]);
 
   readonly studentId = this.route.snapshot.paramMap.get('id');
   readonly isEditMode = this.studentId !== null && this.studentId !== 'new';
@@ -130,6 +134,7 @@ export class StudentForm {
       });
       this.loadFollowUpPlans();
       this.loadUpcomingFollowUps();
+      this.loadActionItems();
     } else if (this.presetParentId) {
       this.form.patchValue({ parentIds: [this.presetParentId] });
     }
@@ -186,6 +191,23 @@ export class StudentForm {
       },
       error: () => this.loadingFollowUps.set(false),
     });
+  }
+
+  private loadActionItems(): void {
+    if (!this.studentId) return;
+    this.actionItemService
+      .list({ studentId: this.studentId, size: 50, sort: 'createdAt,desc' })
+      .subscribe((page) => this.actionItems.set(page.content));
+  }
+
+  completeActionItem(item: ActionItem): void {
+    this.actionItemService.complete(item.id).subscribe(() => this.loadActionItems());
+  }
+
+  startCheckIn(followUp: FollowUp, event: Event): void {
+    event.stopPropagation();
+    event.preventDefault();
+    this.router.navigate(['/follow-ups', followUp.id, 'checkin']);
   }
 
   cancelFollowUp(followUp: FollowUp, event: Event): void {

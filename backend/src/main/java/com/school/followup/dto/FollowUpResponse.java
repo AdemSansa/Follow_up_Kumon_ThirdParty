@@ -1,11 +1,13 @@
 package com.school.followup.dto;
 
+import com.school.followup.model.Concern;
 import com.school.followup.model.FollowUp;
 import com.school.followup.model.FollowUpStatus;
 import com.school.followup.model.MeetingType;
 
 import java.time.Instant;
 import java.time.LocalDateTime;
+import java.util.Set;
 import java.util.UUID;
 
 public record FollowUpResponse(
@@ -19,6 +21,15 @@ public record FollowUpResponse(
         LocalDateTime scheduledEnd,
         FollowUpStatus status,
         boolean overdue,
+        // Check-in results — null/empty until the follow-up is COMPLETED.
+        Instant completedAt,
+        UUID completedBy,
+        Integer progressRating,
+        Integer engagementRating,
+        Integer parentSatisfactionRating,
+        Set<Concern> concerns,
+        String summary,
+        String recommendations,
         Instant createdAt,
         Instant updatedAt
 ) {
@@ -43,6 +54,14 @@ public record FollowUpResponse(
                 followUp.getScheduledEnd(),
                 followUp.getStatus(),
                 overdue,
+                followUp.getCompletedAt(),
+                followUp.getCompletedBy(),
+                followUp.getProgressRating(),
+                followUp.getEngagementRating(),
+                followUp.getParentSatisfactionRating(),
+                followUp.getConcerns(),
+                followUp.getSummary(),
+                followUp.getRecommendations(),
                 followUp.getCreatedAt(),
                 followUp.getUpdatedAt());
     }

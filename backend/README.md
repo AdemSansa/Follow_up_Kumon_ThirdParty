@@ -123,3 +123,16 @@ filter on `GET /api/follow-ups` (`FollowUpSpecifications.overlapsRange`).
 is still just planned, per docs/DATABASE.md; there's no need for it until
 external sync actually exists, and the internal calendar has no reason to
 duplicate data `FollowUp` already has.
+
+## Check-In & Action Items (Sprint 6)
+
+- `CheckInService.complete()` is one `@Transactional` unit: it records the
+  ratings/concerns/summary/recommendation on the `FollowUp`, saves any
+  action items, marks it `COMPLETED`, then calls
+  `FollowUpGenerationService.generateUpcoming()` so the plan's rolling
+  window stays full. A failure anywhere (bad rating, unknown assignee,
+  already completed/cancelled) leaves nothing saved.
+- New `actions` package (`ActionItem` entity, repository + specifications,
+  service, `GET /api/action-items`, `POST /api/action-items/{id}/complete`).
+- Migration `V5__check_in_and_action_items.sql`. Covered by
+  `CheckInIntegrationTest` (8 cases). See [../docs/API.md](../docs/API.md).

@@ -122,10 +122,15 @@ time (`scheduledEnd < now` and an unresolved status), not persisted; see
 "Overdue logic" in [ARCHITECTURE.md](./ARCHITECTURE.md) for why (no cron
 job exists yet to keep a stored status current).
 
-**Not yet added**: the check-in fields (`completedAt`, `completedBy`,
-`summary`, `notes`, `progressRating`, `engagementRating`,
-`parentSatisfactionRating`, `concerns`, `recommendations`, `actionItems`)
-— Sprint 6. `calendarEventId` — Sprint 5/11. The parent slot-scheduling
+**Check-in fields (Sprint 6, migration V5)**: `completedAt`, `completedBy`,
+`summary` (the quick note), `recommendations`, `progressRating`,
+`engagementRating`, `parentSatisfactionRating` (each 1–5, enforced by a
+`CHECK` constraint), and `concerns` — an `@ElementCollection` of the
+`Concern` enum (`ATTENDANCE | HOMEWORK | MOTIVATION | PROGRESS |
+BEHAVIOR`) stored in `follow_up_concerns`; "None" is simply an empty set.
+All are null/empty until the follow-up is `COMPLETED`.
+
+**Not yet added**: `notes` (reserved), `calendarEventId` — Sprint 11. The parent slot-scheduling
 fields (`schedulingStatus`, `schedulingToken`,
 `schedulingTokenExpiresAt`) — same feature doc as above, not built.
 
@@ -143,14 +148,16 @@ per follow-up has `isSelected = true`.
 id, followUpId, startTime, endTime, isSelected, createdAt
 ```
 
-### ActionItem
+### ActionItem (Sprint 6, migration V5)
 
 ```text
 id, followUpId, studentId, assignedTo, title, description, dueDate,
-priority, status, completedAt
+priority, status, completedAt, createdAt
 ```
 
-Status: `TODO | IN_PROGRESS | DONE | CANCELLED`
+Status: `TODO | IN_PROGRESS | DONE | CANCELLED`. Priority: `LOW | MEDIUM |
+HIGH`. `assignedTo` is a nullable user id. `followUp` and `student` are
+`EAGER` (project convention).
 
 ### AuditLog
 

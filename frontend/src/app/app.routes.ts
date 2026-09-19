@@ -56,6 +56,10 @@ export const routes: Routes = [
           import('./features/followups/followup-plan-form/followup-plan-form').then((m) => m.FollowUpPlanForm),
       },
       {
+        path: 'follow-ups/:id/checkin',
+        loadComponent: () => import('./features/checkin/checkin').then((m) => m.Checkin),
+      },
+      {
         path: 'follow-ups/:id/reschedule',
         loadComponent: () =>
           import('./features/followups/followup-reschedule/followup-reschedule').then(

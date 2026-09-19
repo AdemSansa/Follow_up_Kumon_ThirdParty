@@ -42,6 +42,15 @@ plain `Date` math — no calendar library. Clicking an event goes to that
 follow-up's student page (its "Upcoming Follow-Ups" list is the closest
 thing to an event-details view right now).
 
+`features/checkin` is the Sprint 6 fast check-in screen
+(`/follow-ups/:id/checkin`): three 1–5 star ratings (the reusable
+`shared/components/star-rating` control), concern checkboxes ("None" =
+empty), quick note, recommendation, and a repeatable action-item list
+behind an "Action required" toggle. It posts to `FollowUpService.complete()`
+and returns to the student page, whose follow-up list shows a Check-in
+button per open occurrence, the recorded ratings/concerns for completed
+ones, and an "Action Items" card (`ActionItemService`) with "Mark done".
+
 Auth is stateless JWT: `AuthService` stores the token in `localStorage`
 and exposes it via signals; `authInterceptor` attaches it to every
 request and logs out on a 401.

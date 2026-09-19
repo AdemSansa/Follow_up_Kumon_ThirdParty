@@ -169,8 +169,13 @@
           } @else {
             <mat-nav-list>
               @for (followUp of upcomingFollowUps(); track followUp.id) {
-                <a mat-list-item [routerLink]="['/follow-ups', followUp.id, 'reschedule']">
-                  <mat-icon matListItemIcon>event</mat-icon>
+                <a
+                  mat-list-item
+                  [routerLink]="
+                    followUp.status === 'COMPLETED' ? null : ['/follow-ups', followUp.id, 'reschedule']
+                  "
+                >
+                  <mat-icon matListItemIcon>{{ followUp.status === 'COMPLETED' ? 'task_alt' : 'event' }}</mat-icon>
                   <span matListItemTitle>
                     {{ followUp.scheduledStart.replace('T', ' ') }} · {{ followUp.type.replaceAll('_', ' ') }}
                   </span>
@@ -181,21 +186,73 @@
                     @if (followUp.overdue) {
                       <span class="status-badge status-badge--overdue">OVERDUE</span>
                     }
+                    @if (followUp.status === 'COMPLETED') {
+                      · Progress {{ followUp.progressRating }}/5 · Engagement {{ followUp.engagementRating }}/5 ·
+                      Parent {{ followUp.parentSatisfactionRating }}/5
+                    }
                   </span>
+                  @if (followUp.status === 'COMPLETED' && (followUp.summary || followUp.concerns.length)) {
+                    <span matListItemLine>
+                      @if (followUp.concerns.length) {
+                        Concerns: {{ followUp.concerns.join(', ').toLowerCase() }}
+                      }
+                      @if (followUp.summary) {
+                        {{ followUp.concerns.length ? '·' : '' }} {{ followUp.summary }}
+                      }
+                    </span>
+                  }
                   @if (followUp.status !== 'CANCELLED' && followUp.status !== 'COMPLETED') {
-                    <button
-                      mat-icon-button
-                      matListItemMeta
-                      (click)="cancelFollowUp(followUp, $event)"
-                      aria-label="Cancel follow-up"
-                    >
-                      <mat-icon>event_busy</mat-icon>
-                    </button>
+                    <span matListItemMeta class="student-form__row-actions">
+                      <button
+                        mat-flat-button
+                        color="primary"
+                        (click)="startCheckIn(followUp, $event)"
+                        aria-label="Start check-in"
+                      >
+                        Check-in
+                      </button>
+                      <button
+                        mat-icon-button
+                        (click)="cancelFollowUp(followUp, $event)"
+                        aria-label="Cancel follow-up"
+                      >
+                        <mat-icon>event_busy</mat-icon>
+                      </button>
+                    </span>
                   }
                 </a>
               }
             </mat-nav-list>
           }
+        }
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card class="student-form__followups">
+      <mat-card-header>
+        <mat-card-title>Action Items</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        @if (actionItems().length === 0) {
+          <p class="student-form__no-plans">No action items — they're created during a check-in.</p>
+        } @else {
+          <mat-list>
+            @for (item of actionItems(); track item.id) {
+              <mat-list-item>
+                <mat-icon matListItemIcon>{{ item.status === 'DONE' ? 'check_circle' : 'radio_button_unchecked' }}</mat-icon>
+                <span matListItemTitle [class.student-form__done]="item.status === 'DONE'">{{ item.title }}</span>
+                <span matListItemLine>
+                  {{ item.status.replaceAll('_', ' ') }}
+                  @if (item.dueDate) {
+                    · due {{ item.dueDate }}
+                  }
+                </span>
+                @if (item.status === 'TODO' || item.status === 'IN_PROGRESS') {
+                  <button mat-button matListItemMeta (click)="completeActionItem(item)">Mark done</button>
+                }
+              </mat-list-item>
+            }
+          </mat-list>
         }
       </mat-card-content>
     </mat-card>

@@ -3,7 +3,7 @@ import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { API_BASE_URL } from '../config';
 import { PageResponse } from '../models/page.model';
-import { FollowUp, FollowUpStatus, RescheduleRequest } from '../models/followup.model';
+import { CompleteFollowUpRequest, FollowUp, FollowUpStatus, RescheduleRequest } from '../models/followup.model';
 
 export interface FollowUpListParams {
   studentId?: string;
@@ -41,6 +41,10 @@ export class FollowUpService {
 
   reschedule(id: string, request: RescheduleRequest): Observable<FollowUp> {
     return this.http.post<FollowUp>(`${this.baseUrl}/${id}/reschedule`, request);
+  }
+
+  complete(id: string, request: CompleteFollowUpRequest): Observable<FollowUp> {
+    return this.http.post<FollowUp>(`${this.baseUrl}/${id}/complete`, request);
   }
 
   cancel(id: string): Observable<FollowUp> {
