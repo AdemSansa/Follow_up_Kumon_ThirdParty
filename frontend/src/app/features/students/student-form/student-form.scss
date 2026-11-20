@@ -56,3 +56,13 @@
   text-decoration: line-through;
   opacity: 0.6;
 }
+
+.parent-option {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.25;
+
+  small {
+    color: rgba(61, 51, 111, 0.65);
+  }
+}

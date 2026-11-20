@@ -70,11 +70,11 @@ class StudentParentIntegrationTest {
 
     @Test
     void createsListsUpdatesAndDeletesAStudentLinkedToAParent() throws Exception {
-        String parentId = createParent("Amina", "BenAli");
+        String parentId = createParent("Amina", "Zqtestfamily");
 
         ObjectNode createBody = objectMapper.createObjectNode();
         createBody.put("firstName", "Ahmed");
-        createBody.put("lastName", "BenAli");
+        createBody.put("lastName", "Zqtestfamily");
         createBody.put("enrollmentDate", "2026-09-01");
         createBody.put("status", "ACTIVE");
         createBody.put("level", "A");
@@ -95,7 +95,7 @@ class StudentParentIntegrationTest {
         // Findable by parent's name via the free-text search filter.
         mockMvc.perform(get("/api/students")
                         .header("Authorization", authHeader())
-                        .param("search", "BenAli"))
+                        .param("search", "Zqtestfamily"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.totalElements").value(1))
                 .andExpect(jsonPath("$.content[0].id").value(studentId));
@@ -114,7 +114,7 @@ class StudentParentIntegrationTest {
         // hold other ACTIVE/ENGLISH students.
         mockMvc.perform(get("/api/students")
                         .header("Authorization", authHeader())
-                        .param("search", "BenAli")
+                        .param("search", "Zqtestfamily")
                         .param("subject", "ENGLISH")
                         .param("status", "ACTIVE"))
                 .andExpect(status().isOk())
@@ -124,7 +124,7 @@ class StudentParentIntegrationTest {
         // Not returned once filtered to a status it doesn't have.
         mockMvc.perform(get("/api/students")
                         .header("Authorization", authHeader())
-                        .param("search", "BenAli")
+                        .param("search", "Zqtestfamily")
                         .param("status", "WITHDRAWN"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.totalElements").value(0));
@@ -205,6 +205,105 @@ class StudentParentIntegrationTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.totalElements").value(1))
                 .andExpect(jsonPath("$.content[0].id").value(parentId));
+    }
+
+    private String createStudent(String firstName, String lastName) throws Exception {
+        ObjectNode body = objectMapper.createObjectNode();
+        body.put("firstName", firstName);
+        body.put("lastName", lastName);
+        body.put("enrollmentDate", "2026-09-01");
+        body.put("status", "ACTIVE");
+        String response = mockMvc.perform(post("/api/students")
+                        .header("Authorization", authHeader())
+                        .contentType("application/json")
+                        .content(objectMapper.writeValueAsString(body)))
+                .andExpect(status().isCreated())
+                .andReturn().getResponse().getContentAsString();
+        return objectMapper.readTree(response).get("id").asText();
+    }
+
+    @Test
+    void studentPhotoCanBeUploadedReadAndRemovedAndOnlyRealImagesAreAccepted() throws Exception {
+        String studentId = createStudent("Lina", "Photo");
+        String url = "/api/students/" + studentId + "/photo";
+        byte[] png = {(byte) 0x89, 'P', 'N', 'G', '\r', '\n', 0x1A, '\n', 0, 0, 0, 13, 'I', 'H', 'D', 'R'};
+
+        mockMvc.perform(get(url).header("Authorization", authHeader()))
+                .andExpect(status().isNotFound());
+        mockMvc.perform(get(url)).andExpect(status().isUnauthorized());
+        mockMvc.perform(get("/api/students/" + studentId).header("Authorization", authHeader()))
+                .andExpect(jsonPath("$.photoUpdatedAt").doesNotExist());
+
+        mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart(url)
+                        .file(new org.springframework.mock.web.MockMultipartFile("file", "face.png", "image/png", png))
+                        .with(r -> { r.setMethod("PUT"); return r; })
+                        .header("Authorization", authHeader()))
+                .andExpect(status().isNoContent());
+        mockMvc.perform(get(url).header("Authorization", authHeader()))
+                .andExpect(status().isOk())
+                .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.content().contentType("image/png"))
+                .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.content().bytes(png));
+
+        // The student and the list say a photo exists (so the UI only fetches images that exist).
+        mockMvc.perform(get("/api/students/" + studentId).header("Authorization", authHeader()))
+                .andExpect(jsonPath("$.photoUpdatedAt").isNotEmpty());
+        mockMvc.perform(get("/api/students").param("search", "Photo").header("Authorization", authHeader()))
+                .andExpect(jsonPath("$.content[?(@.id == '" + studentId + "')].photoUpdatedAt").isNotEmpty());
+
+        // A script/SVG/text file renamed to .png is refused (type is checked from the bytes).
+        mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart(url)
+                        .file(new org.springframework.mock.web.MockMultipartFile("file", "x.png", "image/png",
+                                "<svg onload=alert(1)>".getBytes()))
+                        .with(r -> { r.setMethod("PUT"); return r; })
+                        .header("Authorization", authHeader()))
+                .andExpect(status().isBadRequest());
+
+        mockMvc.perform(delete(url).header("Authorization", authHeader()))
+                .andExpect(status().isNoContent());
+        mockMvc.perform(get(url).header("Authorization", authHeader()))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void staffCannotDeleteAStudent() throws Exception {
+        String studentId = createStudent("Rania", "Mansour");
+
+        mockMvc.perform(delete("/api/students/" + studentId)
+                        .header("Authorization",
+                                "Bearer " + jwtService.generateToken("staff-only@example.com", Role.STAFF)))
+                .andExpect(status().isForbidden());
+
+        mockMvc.perform(get("/api/students/" + studentId)
+                        .header("Authorization", authHeader()))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    void studentWithFollowUpHistoryCannotBeDeleted() throws Exception {
+        // Business rule 1: follow-up history is never deleted.
+        String studentId = createStudent("Omar", "Jaziri");
+
+        ObjectNode followUp = objectMapper.createObjectNode();
+        followUp.put("studentId", studentId);
+        followUp.put("type", "PHONE_CALL");
+        followUp.put("scheduledStart", "2026-09-10T10:00:00");
+        followUp.put("scheduledEnd", "2026-09-10T10:30:00");
+        mockMvc.perform(post("/api/follow-ups")
+                        .header("Authorization", authHeader())
+                        .contentType("application/json")
+                        .content(objectMapper.writeValueAsString(followUp)))
+                .andExpect(status().isCreated());
+
+        mockMvc.perform(delete("/api/students/" + studentId)
+                        .header("Authorization", authHeader()))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value(org.hamcrest.Matchers.containsString("WITHDRAWN")));
+
+        mockMvc.perform(get("/api/follow-ups")
+                        .header("Authorization", authHeader())
+                        .param("studentId", studentId))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.totalElements").value(1));
     }
 
     @Test

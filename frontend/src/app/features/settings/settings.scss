@@ -1,0 +1,46 @@
+.settings__card {
+  max-width: 820px;
+}
+
+.settings__row {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem 0;
+  border-top: 1px solid rgba(61, 51, 111, 0.12);
+
+  h3 {
+    margin: 0 0 0.25rem;
+  }
+
+  > div:first-child {
+    flex: 1 1 360px;
+  }
+}
+
+.settings__actions {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+}
+
+.settings__muted {
+  color: rgba(61, 51, 111, 0.65);
+}
+
+.settings__msg {
+  padding: 0.5rem 0.75rem;
+  border-radius: 8px;
+  background: rgba(79, 184, 160, 0.15);
+}
+
+.settings__msg--error {
+  background: #fde8eb;
+  color: #b3261e;
+}
+
+.settings__foot {
+  margin-top: 0.75rem;
+  font-size: 0.85rem;
+}

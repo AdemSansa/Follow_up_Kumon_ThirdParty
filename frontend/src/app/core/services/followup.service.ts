@@ -3,7 +3,14 @@ import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { API_BASE_URL } from '../config';
 import { PageResponse } from '../models/page.model';
-import { CompleteFollowUpRequest, FollowUp, FollowUpStatus, RescheduleRequest } from '../models/followup.model';
+import {
+  AgendaItem,
+  CompleteFollowUpRequest,
+  FollowUp,
+  FollowUpStatus,
+  MeetingsStatus,
+  RescheduleRequest,
+} from '../models/followup.model';
 
 export interface FollowUpListParams {
   studentId?: string;
@@ -37,6 +44,31 @@ export class FollowUpService {
 
   get(id: string): Observable<FollowUp> {
     return this.http.get<FollowUp>(`${this.baseUrl}/${id}`);
+  }
+
+  /** Creates the Google Meet link now instead of waiting for the background job. */
+  createMeeting(id: string): Observable<{ status: string; joinUrl: string | null; lastError: string | null }> {
+    return this.http.post<{ status: string; joinUrl: string | null; lastError: string | null }>(
+      `${this.baseUrl}/${id}/meeting`,
+      {},
+    );
+  }
+
+  /** Emails the Meet link to the parent(s) now; `resend` sends again even if already sent. */
+  sendMeetingInvite(id: string, resend = false): Observable<{ sent: number }> {
+    return this.http.post<{ sent: number }>(`${this.baseUrl}/${id}/meeting/invite`, {}, {
+      params: new HttpParams().set('resend', String(resend)),
+    });
+  }
+
+  meetingsStatus(): Observable<MeetingsStatus> {
+    return this.http.get<MeetingsStatus>(`${API_BASE_URL}/meetings/status`);
+  }
+
+  /** A day's check-ins with full details (default: today). `date` is YYYY-MM-DD. */
+  agenda(date?: string): Observable<AgendaItem[]> {
+    const params = date ? new HttpParams().set('date', date) : undefined;
+    return this.http.get<AgendaItem[]>(`${this.baseUrl}/agenda`, { params });
   }
 
   reschedule(id: string, request: RescheduleRequest): Observable<FollowUp> {

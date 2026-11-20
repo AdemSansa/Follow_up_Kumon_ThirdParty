@@ -1,0 +1,95 @@
+<h1>Settings</h1>
+
+@if (message(); as m) {
+  <p class="settings__msg" [class.settings__msg--error]="!m.ok" role="status">{{ m.text }}</p>
+}
+@if (loading()) {
+  <mat-progress-bar mode="indeterminate"></mat-progress-bar>
+}
+
+@if (accounts(); as a) {
+  <mat-card class="settings__card">
+    <mat-card-header>
+      <mat-icon mat-card-avatar>videocam</mat-icon>
+      <mat-card-title>Google Meet for online check-ins</mat-card-title>
+      <mat-card-subtitle>
+        Video-call check-ins get a Meet link automatically, and the parent receives it by email
+        {{ status()?.inviteLeadHours ?? 24 }}h before. A free Gmail account works.
+      </mat-card-subtitle>
+    </mat-card-header>
+
+    <mat-card-content>
+      @if (!a.configured) {
+        <p class="settings__msg settings__msg--error">{{ a.configMessage }}</p>
+      }
+
+      <section class="settings__row">
+        <div>
+          <h3>Center account <span class="settings__muted">(shared)</span></h3>
+          <p class="settings__muted">
+            Hosts every online check-in, so all meetings are in one Google Calendar. Staff sign in to this
+            Google account to run the meetings.
+          </p>
+          @if (a.center; as c) {
+            <p>
+              <mat-icon inline>check_circle</mat-icon> Connected as <strong>{{ c.googleEmail }}</strong>
+              <span class="settings__muted">· since {{ c.connectedAt | date: 'd MMM y' }}</span>
+            </p>
+            @if (c.lastError) {
+              <p class="settings__msg settings__msg--error">{{ c.lastError }}</p>
+            }
+          } @else {
+            <p class="settings__muted">Not connected.</p>
+          }
+        </div>
+        @if (isAdmin()) {
+          <div class="settings__actions">
+            <button mat-flat-button color="primary" [disabled]="!a.configured || busy()" (click)="connect('CENTER')">
+              {{ a.center ? 'Reconnect' : 'Connect Google account' }}
+            </button>
+            @if (a.center) {
+              <button mat-button [disabled]="busy()" (click)="disconnect('center')">Disconnect</button>
+            }
+          </div>
+        } @else {
+          <p class="settings__muted">Only an admin can change this.</p>
+        }
+      </section>
+
+      <section class="settings__row">
+        <div>
+          <h3>My own Google account <span class="settings__muted">(optional)</span></h3>
+          <p class="settings__muted">
+            Connect it if you want to host your own check-ins from your own calendar. If you don't, the center
+            account hosts them.
+          </p>
+          @if (a.mine; as m) {
+            <p>
+              <mat-icon inline>check_circle</mat-icon> Connected as <strong>{{ m.googleEmail }}</strong>
+            </p>
+            @if (m.lastError) {
+              <p class="settings__msg settings__msg--error">{{ m.lastError }}</p>
+            }
+          } @else {
+            <p class="settings__muted">Not connected — the center account is used.</p>
+          }
+        </div>
+        <div class="settings__actions">
+          <button mat-stroked-button [disabled]="!a.configured || busy()" (click)="connect('PERSONAL')">
+            {{ a.mine ? 'Reconnect' : 'Connect my Google account' }}
+          </button>
+          @if (a.mine) {
+            <button mat-button [disabled]="busy()" (click)="disconnect('mine')">Disconnect</button>
+          }
+        </div>
+      </section>
+
+      @if (status(); as s) {
+        <p class="settings__muted settings__foot">
+          Automatic links & invites: {{ s.automationEnabled ? 'on' : 'off' }} · Time zone: {{ s.timezone }} ·
+          Email: {{ s.emailConfigured ? 'configured' : 'not configured' }}
+        </p>
+      }
+    </mat-card-content>
+  </mat-card>
+}

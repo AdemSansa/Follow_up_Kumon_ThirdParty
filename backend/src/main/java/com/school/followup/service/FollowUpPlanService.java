@@ -77,6 +77,7 @@ public class FollowUpPlanService {
         if (request.active() != null) {
             plan.setActive(request.active());
         }
+        plan.setOccurrenceCount(request.occurrenceCount());
         plan = followUpPlanRepository.save(plan);
         generationService.generateUpcoming(plan);
         return plan;
@@ -107,6 +108,7 @@ public class FollowUpPlanService {
         if (request.active() != null) {
             plan.setActive(request.active());
         }
+        plan.setOccurrenceCount(request.occurrenceCount());
         generationService.regenerateFuture(plan);
         return plan;
     }

@@ -1,11 +1,13 @@
 package com.school.followup.controller;
 
 import com.school.common.dto.PageResponse;
+import com.school.followup.dto.AgendaItemResponse;
 import com.school.followup.dto.CompleteFollowUpRequest;
 import com.school.followup.dto.FollowUpRequest;
 import com.school.followup.dto.FollowUpResponse;
 import com.school.followup.dto.RescheduleRequest;
 import com.school.followup.model.FollowUpStatus;
+import com.school.followup.service.AgendaService;
 import com.school.followup.service.CheckInService;
 import com.school.followup.service.FollowUpService;
 import jakarta.validation.Valid;
@@ -22,6 +24,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.time.LocalDate;
+import java.util.List;
 import java.util.UUID;
 
 /**
@@ -35,8 +38,20 @@ public class FollowUpController {
 
     private final FollowUpService followUpService;
     private final CheckInService checkInService;
+    private final AgendaService agendaService;
 
-    public FollowUpController(FollowUpService followUpService, CheckInService checkInService) {
+    /**
+     * A day's check-ins (default: today) with contact, student, staff and
+     * plan details — powers the dashboard's "Today" list.
+     */
+    @GetMapping("/agenda")
+    public List<AgendaItemResponse> agenda(@RequestParam(required = false) LocalDate date) {
+        return agendaService.forDay(date != null ? date : LocalDate.now());
+    }
+
+    public FollowUpController(FollowUpService followUpService, CheckInService checkInService,
+                              AgendaService agendaService) {
+        this.agendaService = agendaService;
         this.followUpService = followUpService;
         this.checkInService = checkInService;
     }

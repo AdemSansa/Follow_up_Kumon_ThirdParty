@@ -19,6 +19,8 @@ export interface Student {
   assignedTeacherId: string | null;
   parents: Parent[];
   notes: string | null;
+  /** When the photo last changed; null = no photo. */
+  photoUpdatedAt: string | null;
   createdAt: string;
   updatedAt: string;
 }

@@ -11,7 +11,12 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { debounceTime, distinctUntilChanged } from 'rxjs';
+import { HttpErrorResponse } from '@angular/common/http';
 import { StudentService } from '../../../core/services/student.service';
+import { AuthService } from '../../../core/services/auth.service';
+import { UiFeedback } from '../../../core/services/ui-feedback.service';
+import { StudentAvatar } from '../../../shared/components/student-avatar/student-avatar';
+import { ApiError } from '../../../core/models/api-error.model';
 import { Student, STUDENT_STATUSES, StudentStatus, SUBJECTS, Subject } from '../../../core/models/student.model';
 
 @Component({
@@ -28,6 +33,7 @@ import { Student, STUDENT_STATUSES, StudentStatus, SUBJECTS, Subject } from '../
     MatButtonModule,
     MatIconModule,
     MatProgressBarModule,
+    StudentAvatar,
   ],
   templateUrl: './student-list.html',
   styleUrl: './student-list.scss',
@@ -43,6 +49,10 @@ export class StudentList {
   readonly students = signal<Student[]>([]);
   readonly totalElements = signal(0);
   readonly loading = signal(false);
+  readonly errorMessage = signal<string | null>(null);
+  /** Deleting is ADMIN-only on the backend; staff don't see the button. */
+  readonly isAdmin = inject(AuthService).isAdmin;
+  private readonly ui = inject(UiFeedback);
   readonly pageIndex = signal(0);
   readonly pageSize = signal(20);
 
@@ -94,9 +104,30 @@ export class StudentList {
 
   deleteStudent(student: Student, event: Event): void {
     event.stopPropagation();
-    if (!confirm(`Delete ${student.firstName} ${student.lastName}? This cannot be undone.`)) {
-      return;
-    }
-    this.studentService.delete(student.id).subscribe(() => this.load());
+    const name = `${student.firstName} ${student.lastName}`;
+    this.ui
+      .confirm({
+        title: 'Delete student?',
+        message: `${name} will be permanently removed. This cannot be undone.\n\nStudents with check-in history can't be deleted — set their status to Withdrawn instead.`,
+        confirmText: 'Delete',
+        danger: true,
+      })
+      .subscribe((ok) => {
+        if (!ok) return;
+        this.errorMessage.set(null);
+        this.studentService.delete(student.id).subscribe({
+          next: () => {
+            this.ui.success(`${name} deleted`);
+            this.load();
+          },
+          error: (err: HttpErrorResponse) => {
+            // e.g. 400 when the student has follow-up history (withdraw them instead).
+            const apiError = err.error as ApiError | undefined;
+            const message = apiError?.message ?? 'Could not delete this student.';
+            this.errorMessage.set(message);
+            this.ui.error(message);
+          },
+        });
+      });
   }
 }

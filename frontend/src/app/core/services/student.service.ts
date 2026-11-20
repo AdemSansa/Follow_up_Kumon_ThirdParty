@@ -47,4 +47,20 @@ export class StudentService {
   delete(id: string): Observable<void> {
     return this.http.delete<void>(`${this.baseUrl}/${id}`);
   }
+
+  /** The profile picture as a Blob (404 when the student has none). Fetched with the login token. */
+  getPhoto(id: string): Observable<Blob> {
+    return this.http.get(`${this.baseUrl}/${id}/photo`, { responseType: 'blob' });
+  }
+
+  /** JPEG, PNG or WebP, max 2 MB. */
+  uploadPhoto(id: string, file: File): Observable<void> {
+    const form = new FormData();
+    form.append('file', file);
+    return this.http.put<void>(`${this.baseUrl}/${id}/photo`, form);
+  }
+
+  deletePhoto(id: string): Observable<void> {
+    return this.http.delete<void>(`${this.baseUrl}/${id}/photo`);
+  }
 }

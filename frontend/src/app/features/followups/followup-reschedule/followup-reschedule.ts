@@ -9,6 +9,9 @@ import { MatInputModule } from '@angular/material/input';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { FollowUpService } from '../../../core/services/followup.service';
 import { ApiError } from '../../../core/models/api-error.model';
+import { UiFeedback } from '../../../core/services/ui-feedback.service';
+import { BackNavigation } from '../../../core/services/back-navigation.service';
+import { UnsavedChangesAware } from '../../../shared/unsaved-changes';
 
 @Component({
   selector: 'app-followup-reschedule',
@@ -25,11 +28,13 @@ import { ApiError } from '../../../core/models/api-error.model';
   templateUrl: './followup-reschedule.html',
   styleUrl: './followup-reschedule.scss',
 })
-export class FollowUpReschedule {
+export class FollowUpReschedule extends UnsavedChangesAware {
   private readonly fb = inject(FormBuilder);
   private readonly followUpService = inject(FollowUpService);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
+  private readonly ui = inject(UiFeedback);
+  private readonly backNav = inject(BackNavigation);
 
   private readonly followUpId = this.route.snapshot.paramMap.get('id')!;
 
@@ -44,7 +49,16 @@ export class FollowUpReschedule {
     scheduledEnd: ['', Validators.required],
   });
 
+  /** Set after a successful save, so leaving afterwards doesn't warn. */
+  private saved = false;
+
+  /** Unsaved edits on this page? (used by unsavedChangesGuard and the tab-close warning) */
+  hasUnsavedChanges(): boolean {
+    return !this.saved && !this.saving() && this.form.dirty;
+  }
+
   constructor() {
+    super();
     this.followUpService.get(this.followUpId).subscribe((followUp) => {
       this.studentName.set(`${followUp.student.firstName} ${followUp.student.lastName}`);
       this.studentId.set(followUp.student.id);
@@ -73,12 +87,19 @@ export class FollowUpReschedule {
       .subscribe({
         next: () => {
           this.saving.set(false);
-          this.router.navigate(this.cancelLink);
+          this.saved = true;
+          const when = new Date(raw.scheduledStart).toLocaleString(undefined, {
+            weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit',
+          });
+          this.ui.success(`Check-in moved to ${when}`);
+          this.backNav.back(this.cancelLink);
         },
         error: (err: HttpErrorResponse) => {
           this.saving.set(false);
           const apiError = err.error as ApiError | undefined;
-          this.errorMessage.set(apiError?.message ?? 'Could not reschedule this follow-up.');
+          const message = apiError?.message ?? 'Could not reschedule this follow-up.';
+          this.errorMessage.set(message);
+          this.ui.error(message);
         },
       });
   }

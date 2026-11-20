@@ -1,0 +1,312 @@
+@if (loading() && !student()) {
+  <mat-progress-bar mode="indeterminate"></mat-progress-bar>
+}
+
+@if (notFound()) {
+  <mat-card class="pf__empty">
+    <mat-card-content>
+      <mat-icon>person_off</mat-icon>
+      <p>This student doesn't exist (any more).</p>
+      <a mat-button color="primary" routerLink="/students">Back to students</a>
+    </mat-card-content>
+  </mat-card>
+}
+
+@if (student(); as s) {
+  <a mat-button routerLink="/students" class="pf__back"><mat-icon>arrow_back</mat-icon> Students</a>
+
+  <!-- Header -->
+  <mat-card class="pf__header">
+    <div class="pf__photo">
+      @if (photoUrl(); as url) {
+        <img [src]="url" [alt]="'Photo of ' + s.firstName" />
+      } @else {
+        <span class="pf__initials" aria-hidden="true">{{ initials() }}</span>
+      }
+      <button
+        mat-mini-fab
+        class="pf__photo-btn"
+        [matMenuTriggerFor]="photoMenu"
+        [disabled]="uploading()"
+        matTooltip="Change photo"
+        aria-label="Change photo"
+      >
+        <mat-icon>{{ uploading() ? 'hourglass_top' : 'photo_camera' }}</mat-icon>
+      </button>
+      <mat-menu #photoMenu="matMenu">
+        <button mat-menu-item (click)="fileInput.click()">
+          <mat-icon>upload</mat-icon> {{ photoUrl() ? 'Upload a new photo' : 'Upload a photo' }}
+        </button>
+        @if (photoUrl()) {
+          <button mat-menu-item (click)="removePhoto()"><mat-icon>hide_image</mat-icon> Remove photo</button>
+        }
+      </mat-menu>
+      <input #fileInput type="file" accept="image/jpeg,image/png,image/webp" hidden (change)="onPhotoPicked($event)" />
+    </div>
+
+    <div class="pf__id">
+      <h1>{{ s.firstName }} {{ s.lastName }}</h1>
+      <div class="pf__tags">
+        <span class="status-badge" [class]="'status-badge--' + s.status.toLowerCase()">{{ s.status }}</span>
+        @for (subj of s.subjects; track subj) {
+          <span class="subject-chip" [class]="'subject-chip--' + subj.toLowerCase()">{{ subj }}</span>
+        }
+        @if (s.level) {
+          <span class="pf__pill">Level {{ s.level }}</span>
+        }
+      </div>
+      <p class="pf__muted">
+        Enrolled {{ s.enrollmentDate | date: 'd MMMM y' }} · {{ tenure() }} with the center
+        @if (age() !== null) {
+          · {{ age() }} years old
+        }
+      </p>
+    </div>
+
+    <div class="pf__actions">
+      <button mat-flat-button color="primary" (click)="edit()"><mat-icon>edit</mat-icon> Edit details</button>
+      <a mat-stroked-button [routerLink]="['/follow-up-plans/new']" [queryParams]="{ studentId: s.id }">
+        <mat-icon>event_repeat</mat-icon> Add follow-up plan
+      </a>
+    </div>
+  </mat-card>
+
+  <!-- Stats -->
+  <section class="pf__stats" aria-label="Summary">
+    <div class="stat"><b>{{ stats().completed }}</b><span>Check-ins done</span></div>
+    <div class="stat">
+      <b>{{ stats().next ? (stats().next | date: 'd MMM') : '—' }}</b><span>Next check-in</span>
+    </div>
+    <div class="stat" [class.stat--alert]="stats().overdue > 0"><b>{{ stats().overdue }}</b><span>Overdue</span></div>
+    <div class="stat"><b>{{ stats().avgProgress }}</b><span>Avg progress /5</span></div>
+    <div class="stat" [class.stat--alert]="openActions().length > 0">
+      <b>{{ openActions().length }}</b><span>Open actions</span>
+    </div>
+  </section>
+
+  <div class="pf__grid">
+    <!-- Left column -->
+    <div class="pf__col">
+      <mat-card>
+        <mat-card-header><mat-card-title>Details</mat-card-title></mat-card-header>
+        <mat-card-content>
+          <dl class="pf__dl">
+            <dt>Date of birth</dt>
+            <dd>{{ s.dateOfBirth ? (s.dateOfBirth | date: 'd MMMM y') : '—' }}</dd>
+            <dt>Gender</dt>
+            <dd>{{ s.gender || '—' }}</dd>
+            <dt>Phone</dt>
+            <dd>
+              @if (s.phone) {
+                <a [href]="'tel:' + dialable(s.phone)">{{ s.phone }}</a>
+              } @else {
+                —
+              }
+            </dd>
+            <dt>Email</dt>
+            <dd>
+              @if (s.email) {
+                <a [href]="'mailto:' + s.email">{{ s.email }}</a>
+              } @else {
+                —
+              }
+            </dd>
+            <dt>Address</dt>
+            <dd>{{ s.address || '—' }}</dd>
+            <dt>Enrolled</dt>
+            <dd>{{ s.enrollmentDate | date: 'd MMMM y' }}</dd>
+          </dl>
+          @if (s.notes) {
+            <h3 class="pf__h3">Notes</h3>
+            <p class="pf__notes">{{ s.notes }}</p>
+          }
+        </mat-card-content>
+      </mat-card>
+
+      <mat-card>
+        <mat-card-header><mat-card-title>Family</mat-card-title></mat-card-header>
+        <mat-card-content>
+          @for (p of s.parents; track p.id) {
+            <div class="pf__parent">
+              <a [routerLink]="['/parents', p.id]"><strong>{{ p.firstName }} {{ p.lastName }}</strong></a>
+              <span class="pf__muted">{{ p.relationship }} · prefers {{ label(p.preferredContactMethod).toLowerCase() }}</span>
+              <div class="pf__links">
+                @if (p.phone) {
+                  <a [href]="'tel:' + dialable(p.phone)"><mat-icon inline>call</mat-icon> {{ p.phone }}</a>
+                }
+                @if (p.email) {
+                  <a [href]="'mailto:' + p.email"><mat-icon inline>mail</mat-icon> {{ p.email }}</a>
+                }
+              </div>
+            </div>
+          } @empty {
+            <p class="pf__muted">No parent linked yet — check-in invites can't be emailed.</p>
+            <button mat-stroked-button (click)="edit()">Link a parent</button>
+          }
+        </mat-card-content>
+      </mat-card>
+
+      @if (stats().completed > 0) {
+        <mat-card>
+          <mat-card-header><mat-card-title>Averages</mat-card-title></mat-card-header>
+          <mat-card-content>
+            <dl class="pf__dl">
+              <dt>Progress</dt>
+              <dd>{{ stats().avgProgress }} / 5</dd>
+              <dt>Engagement</dt>
+              <dd>{{ stats().avgEngagement }} / 5</dd>
+              <dt>Parent satisfaction</dt>
+              <dd>{{ stats().avgSatisfaction }} / 5</dd>
+              <dt>Last check-in</dt>
+              <dd>{{ stats().lastCompleted ? (stats().lastCompleted | date: 'd MMM y') : '—' }}</dd>
+            </dl>
+          </mat-card-content>
+        </mat-card>
+      }
+    </div>
+
+    <!-- Right column -->
+    <div class="pf__col">
+      <mat-card>
+        <mat-card-header><mat-card-title>Follow-up plans</mat-card-title></mat-card-header>
+        <mat-card-content>
+          @for (plan of plans(); track plan.id) {
+            <div class="pf__row">
+              <mat-icon>event_repeat</mat-icon>
+              <div class="pf__row-main">
+                <strong>{{ label(plan.frequencyType) }} · {{ label(plan.meetingType).toLowerCase() }}</strong>
+                @if (!plan.active) {
+                  <span class="status-badge status-badge--paused">PAUSED</span>
+                }
+                <span class="pf__muted">
+                  {{ plan.occurrenceCount ? plan.occurrenceCount + ' check-ins' : 'Ongoing' }} · since
+                  {{ plan.startDate | date: 'd MMM y' }}
+                  @if (plan.parent) {
+                    · with {{ plan.parent.firstName }}
+                  }
+                </span>
+              </div>
+              <button mat-icon-button (click)="togglePlan(plan)" [matTooltip]="plan.active ? 'Pause plan' : 'Resume plan'">
+                <mat-icon>{{ plan.active ? 'pause_circle' : 'play_circle' }}</mat-icon>
+              </button>
+              <a mat-icon-button [routerLink]="['/follow-up-plans', plan.id]" matTooltip="Edit plan">
+                <mat-icon>edit</mat-icon>
+              </a>
+            </div>
+          } @empty {
+            <p class="pf__muted">No follow-up plan yet.</p>
+            <a mat-stroked-button [routerLink]="['/follow-up-plans/new']" [queryParams]="{ studentId: s.id }">
+              Add follow-up plan
+            </a>
+          }
+        </mat-card-content>
+      </mat-card>
+
+      <mat-card>
+        <mat-card-header><mat-card-title>Upcoming check-ins</mat-card-title></mat-card-header>
+        <mat-card-content>
+          @for (f of upcoming().slice(0, 6); track f.id) {
+            <div class="pf__row" [class.pf__row--late]="f.overdue">
+              <div class="pf__date">
+                <b>{{ f.scheduledStart | date: 'd' }}</b><span>{{ f.scheduledStart | date: 'MMM' }}</span>
+              </div>
+              <div class="pf__row-main">
+                <strong>{{ f.scheduledStart | date: 'EEEE · HH:mm' }}</strong>
+                <span class="pf__muted">
+                  {{ label(f.type) }}
+                  @if (occurrence(f); as o) {
+                    · {{ o }}
+                  }
+                </span>
+                @if (f.overdue) {
+                  <span class="status-badge status-badge--overdue">OVERDUE</span>
+                }
+              </div>
+              <a mat-flat-button color="primary" [routerLink]="['/follow-ups', f.id, 'checkin']">Check in</a>
+              <button mat-icon-button [matMenuTriggerFor]="more" aria-label="More actions"><mat-icon>more_vert</mat-icon></button>
+              <mat-menu #more="matMenu">
+                <a mat-menu-item [routerLink]="['/follow-ups', f.id, 'reschedule']"><mat-icon>schedule</mat-icon> Reschedule</a>
+                <button mat-menu-item (click)="cancelCheckIn(f)"><mat-icon>event_busy</mat-icon> Cancel check-in</button>
+              </mat-menu>
+            </div>
+          } @empty {
+            <p class="pf__muted">Nothing scheduled.</p>
+          }
+          @if (upcoming().length > 6) {
+            <a mat-button routerLink="/calendar">+ {{ upcoming().length - 6 }} more on the calendar</a>
+          }
+        </mat-card-content>
+      </mat-card>
+
+      <mat-card>
+        <mat-card-header><mat-card-title>Check-in history</mat-card-title></mat-card-header>
+        <mat-card-content>
+          @for (f of visibleHistory(); track f.id) {
+            <div class="pf__hist" [class.pf__hist--off]="f.status !== 'COMPLETED'">
+              <div class="pf__hist-head">
+                <strong>{{ f.scheduledStart | date: 'd MMM y · HH:mm' }}</strong>
+                <span class="pf__muted">{{ label(f.type) }}</span>
+                <span class="status-badge" [class]="'status-badge--' + f.status.toLowerCase()">{{ f.status }}</span>
+              </div>
+              @if (f.status === 'COMPLETED') {
+                @if (f.progressRating !== null) {
+                  <div class="pf__ratings">
+                    <span>Progress <i>{{ stars(f.progressRating) }}</i></span>
+                    <span>Engagement <i>{{ stars(f.engagementRating) }}</i></span>
+                    <span>Parent <i>{{ stars(f.parentSatisfactionRating) }}</i></span>
+                  </div>
+                }
+                @if (f.concerns.length) {
+                  <div class="pf__tags">
+                    @for (c of f.concerns; track c) {
+                      <span class="pf__pill pf__pill--warn">{{ label(c) }}</span>
+                    }
+                  </div>
+                }
+                @if (f.summary) {
+                  <p class="pf__notes">“{{ f.summary }}”</p>
+                }
+                @if (f.recommendations) {
+                  <p><strong>Next steps:</strong> {{ f.recommendations }}</p>
+                }
+              }
+            </div>
+          } @empty {
+            <p class="pf__muted">No past check-ins yet.</p>
+          }
+          @if (history().length > 5) {
+            <button mat-button (click)="showAllHistory.set(!showAllHistory())">
+              {{ showAllHistory() ? 'Show less' : 'Show all ' + history().length }}
+            </button>
+          }
+        </mat-card-content>
+      </mat-card>
+
+      <mat-card>
+        <mat-card-header><mat-card-title>Action items</mat-card-title></mat-card-header>
+        <mat-card-content>
+          @for (a of openActions(); track a.id) {
+            <div class="pf__row">
+              <mat-icon [class.pf__high]="a.priority === 'HIGH'">radio_button_unchecked</mat-icon>
+              <div class="pf__row-main">
+                <strong>{{ a.title }}</strong>
+                <span class="pf__muted">
+                  {{ label(a.priority) }} priority
+                  @if (a.dueDate) {
+                    · due {{ a.dueDate | date: 'd MMM' }}
+                  }
+                </span>
+              </div>
+              <button mat-stroked-button (click)="completeAction(a)">Done</button>
+            </div>
+          } @empty {
+            <p class="pf__muted">No open action items.</p>
+          }
+          @if (doneActions().length) {
+            <p class="pf__muted pf__done">{{ doneActions().length }} completed</p>
+          }
+        </mat-card-content>
+      </mat-card>
+    </div>
+  </div>
+}

@@ -4,6 +4,7 @@ import com.school.followup.model.FrequencyType;
 import com.school.followup.model.IntervalUnit;
 import com.school.followup.model.MeetingType;
 import com.school.followup.model.ReminderOffset;
+import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 
@@ -27,6 +28,9 @@ public record FollowUpPlanRequest(
         String location,
         @NotNull MeetingType meetingType,
         Set<ReminderOffset> reminderOffsets,
-        Boolean active
+        Boolean active,
+        /** Total number of check-ins for this plan; null = ongoing (no end). */
+        @Min(1) @Max(FollowUpPlanRequest.MAX_OCCURRENCE_COUNT) Integer occurrenceCount
 ) {
+    public static final int MAX_OCCURRENCE_COUNT = 200;
 }

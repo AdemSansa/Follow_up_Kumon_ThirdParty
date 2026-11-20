@@ -15,6 +15,9 @@ import { StudentService } from '../../../core/services/student.service';
 import { ContactMethod } from '../../../core/models/parent.model';
 import { Student } from '../../../core/models/student.model';
 import { ApiError } from '../../../core/models/api-error.model';
+import { UiFeedback } from '../../../core/services/ui-feedback.service';
+import { BackNavigation } from '../../../core/services/back-navigation.service';
+import { UnsavedChangesAware } from '../../../shared/unsaved-changes';
 
 const CONTACT_METHODS: ContactMethod[] = ['PHONE', 'EMAIL', 'SMS', 'WHATSAPP'];
 
@@ -36,12 +39,14 @@ const CONTACT_METHODS: ContactMethod[] = ['PHONE', 'EMAIL', 'SMS', 'WHATSAPP'];
   templateUrl: './parent-form.html',
   styleUrl: './parent-form.scss',
 })
-export class ParentForm {
+export class ParentForm extends UnsavedChangesAware {
   private readonly fb = inject(FormBuilder);
   private readonly parentService = inject(ParentService);
   private readonly studentService = inject(StudentService);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
+  private readonly ui = inject(UiFeedback);
+  private readonly backNav = inject(BackNavigation);
 
   readonly contactMethods = CONTACT_METHODS;
   readonly loading = signal(false);
@@ -63,7 +68,16 @@ export class ParentForm {
     notes: [''],
   });
 
+  /** Set after a successful save, so leaving afterwards doesn't warn. */
+  private saved = false;
+
+  /** Unsaved edits on this page? (used by unsavedChangesGuard and the tab-close warning) */
+  hasUnsavedChanges(): boolean {
+    return !this.saved && !this.saving() && this.form.dirty;
+  }
+
   constructor() {
+    super();
     if (this.isEditMode && this.parentId) {
       this.loading.set(true);
       this.parentService.get(this.parentId).subscribe((parent) => {
@@ -120,12 +134,23 @@ export class ParentForm {
     save$.subscribe({
       next: (parent) => {
         this.saving.set(false);
-        this.router.navigate(['/parents', parent.id]);
+        this.saved = true;
+        const name = `${parent.firstName} ${parent.lastName}`;
+        if (this.isEditMode) {
+          this.ui.success(`${name} saved`);
+          this.backNav.back(['/parents']);
+        } else {
+          // New family: open the parent's page so their child(ren) can be added next.
+          this.ui.success(`${name} registered — now add their child`);
+          this.router.navigate(['/parents', parent.id]);
+        }
       },
       error: (err: HttpErrorResponse) => {
         this.saving.set(false);
         const apiError = err.error as ApiError | undefined;
-        this.errorMessage.set(apiError?.message ?? 'Could not save this parent.');
+        const message = apiError?.message ?? 'Could not save this parent.';
+        this.errorMessage.set(message);
+        this.ui.error(message);
       },
     });
   }

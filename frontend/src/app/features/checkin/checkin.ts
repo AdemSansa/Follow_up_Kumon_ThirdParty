@@ -13,7 +13,10 @@ import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { FollowUpService } from '../../core/services/followup.service';
 import { CONCERNS, Concern, FollowUp } from '../../core/models/followup.model';
 import { ApiError } from '../../core/models/api-error.model';
+import { UiFeedback } from '../../core/services/ui-feedback.service';
+import { BackNavigation } from '../../core/services/back-navigation.service';
 import { StarRating } from '../../shared/components/star-rating/star-rating';
+import { UnsavedChangesAware } from '../../shared/unsaved-changes';
 
 /**
  * The fast check-in screen (full-product-plan.md §12): ratings, concern
@@ -39,11 +42,13 @@ import { StarRating } from '../../shared/components/star-rating/star-rating';
   templateUrl: './checkin.html',
   styleUrl: './checkin.scss',
 })
-export class Checkin {
+export class Checkin extends UnsavedChangesAware {
   private readonly fb = inject(FormBuilder);
   private readonly followUpService = inject(FollowUpService);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
+  private readonly ui = inject(UiFeedback);
+  private readonly backNav = inject(BackNavigation);
 
   private readonly followUpId = this.route.snapshot.paramMap.get('id')!;
 
@@ -65,7 +70,16 @@ export class Checkin {
 
   readonly actionItems = new FormArray<FormGroup<{ title: FormControl<string>; dueDate: FormControl<string> }>>([]);
 
+  /** Set after a successful save, so leaving afterwards doesn't warn. */
+  private saved = false;
+
+  /** Unsaved edits on this page? (used by unsavedChangesGuard and the tab-close warning) */
+  hasUnsavedChanges(): boolean {
+    return !this.saved && !this.saving() && (this.form.dirty || this.actionItems.length > 0 || this.selectedConcerns().size > 0);
+  }
+
   constructor() {
+    super();
     this.followUpService.get(this.followUpId).subscribe({
       next: (followUp) => {
         this.followUp.set(followUp);
@@ -158,12 +172,20 @@ export class Checkin {
       .subscribe({
         next: () => {
           this.saving.set(false);
-          this.router.navigate(this.cancelLink);
+          this.saved = true;
+          this.ui.success(
+            actionItems.length
+              ? `Check-in completed · ${actionItems.length} action item${actionItems.length > 1 ? 's' : ''} added`
+              : 'Check-in completed',
+          );
+          this.backNav.back(this.cancelLink);
         },
         error: (err: HttpErrorResponse) => {
           this.saving.set(false);
           const apiError = err.error as ApiError | undefined;
-          this.errorMessage.set(apiError?.message ?? 'Could not save this check-in.');
+          const message = apiError?.message ?? 'Could not save this check-in.';
+          this.errorMessage.set(message);
+          this.ui.error(message);
         },
       });
   }

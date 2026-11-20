@@ -30,6 +30,7 @@ public record FollowUpPlanResponse(
         boolean active,
         LocalDate nextFollowUpDate,
         Set<ReminderOffset> reminderOffsets,
+        Integer occurrenceCount,
         Instant createdAt,
         Instant updatedAt
 ) {
@@ -55,6 +56,7 @@ public record FollowUpPlanResponse(
                 plan.isActive(),
                 plan.getNextFollowUpDate(),
                 plan.getReminderOffsets(),
+                plan.getOccurrenceCount(),
                 plan.getCreatedAt(),
                 plan.getUpdatedAt());
     }

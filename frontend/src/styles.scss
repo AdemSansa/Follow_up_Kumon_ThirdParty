@@ -152,3 +152,20 @@ h3 {
 }
 
 /* You can add global styles to this file, and also import other style files */
+
+// Toasts (UiFeedback.success / .error)
+.toast--success {
+  --mdc-snackbar-container-color: #2e7d5b;
+  --mat-snack-bar-container-color: #2e7d5b;
+  --mdc-snackbar-supporting-text-color: #fff;
+  --mat-snack-bar-supporting-text-color: #fff;
+  --mat-snack-bar-button-color: #fff;
+}
+
+.toast--error {
+  --mdc-snackbar-container-color: #b3261e;
+  --mat-snack-bar-container-color: #b3261e;
+  --mdc-snackbar-supporting-text-color: #fff;
+  --mat-snack-bar-supporting-text-color: #fff;
+  --mat-snack-bar-button-color: #fff;
+}

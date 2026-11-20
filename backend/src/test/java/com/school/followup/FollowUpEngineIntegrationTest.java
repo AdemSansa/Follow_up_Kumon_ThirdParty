@@ -76,6 +76,147 @@ class FollowUpEngineIntegrationTest {
         return objectMapper.readTree(response).get("id").asText();
     }
 
+    private ObjectNode countedPlanBody(String studentId, int occurrenceCount) {
+        ObjectNode body = objectMapper.createObjectNode();
+        body.put("studentId", studentId);
+        body.put("frequencyType", "WEEKLY");
+        body.put("startDate", LocalDate.now().plusDays(1).toString());
+        body.put("meetingType", "PARENT_MEETING");
+        body.put("occurrenceCount", occurrenceCount);
+        return body;
+    }
+
+    private long occurrencesOf(String planId) throws Exception {
+        String response = mockMvc.perform(get("/api/follow-ups")
+                        .header("Authorization", authHeader())
+                        .param("followUpPlanId", planId)
+                        .param("size", "1"))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
+        return objectMapper.readTree(response).get("totalElements").asLong();
+    }
+
+    @Test
+    void agendaListsTheDaysCheckInsWithContactAndPlanDetails() throws Exception {
+        ObjectNode parent = objectMapper.createObjectNode();
+        parent.put("firstName", "Leila");
+        parent.put("lastName", "Agenda");
+        parent.put("phone", "+216 20 111 222");
+        parent.put("email", "leila.agenda@example.com");
+        parent.put("relationship", "Mother");
+        parent.put("preferredContactMethod", "WHATSAPP");
+        String parentId = objectMapper.readTree(mockMvc.perform(post("/api/parents")
+                        .header("Authorization", authHeader())
+                        .contentType("application/json")
+                        .content(objectMapper.writeValueAsString(parent)))
+                .andExpect(status().isCreated())
+                .andReturn().getResponse().getContentAsString()).get("id").asText();
+
+        ObjectNode student = objectMapper.createObjectNode();
+        student.put("firstName", "Rami");
+        student.put("lastName", "Agenda");
+        student.put("enrollmentDate", "2026-01-01");
+        student.put("status", "ACTIVE");
+        student.put("level", "C");
+        student.putArray("subjects").add("MATH");
+        student.putArray("parentIds").add(parentId);
+        String studentId = objectMapper.readTree(mockMvc.perform(post("/api/students")
+                        .header("Authorization", authHeader())
+                        .contentType("application/json")
+                        .content(objectMapper.writeValueAsString(student)))
+                .andExpect(status().isCreated())
+                .andReturn().getResponse().getContentAsString()).get("id").asText();
+
+        ObjectNode plan = countedPlanBody(studentId, 5);
+        plan.put("startDate", LocalDate.now().toString());
+        plan.put("preferredTime", "23:30:00");
+        plan.put("parentId", parentId);
+        plan.put("location", "Room 2");
+        mockMvc.perform(post("/api/follow-up-plans")
+                        .header("Authorization", authHeader())
+                        .contentType("application/json")
+                        .content(objectMapper.writeValueAsString(plan)))
+                .andExpect(status().isCreated());
+
+        String agenda = mockMvc.perform(get("/api/follow-ups/agenda")
+                        .header("Authorization", authHeader()))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
+        JsonNode item = null;
+        for (JsonNode candidate : objectMapper.readTree(agenda)) {
+            if (candidate.get("student").get("id").asText().equals(studentId)) {
+                item = candidate;
+            }
+        }
+        org.assertj.core.api.Assertions.assertThat(item).as("today's check-in for the new student").isNotNull();
+        org.assertj.core.api.Assertions.assertThat(item.get("location").asText()).isEqualTo("Room 2");
+        org.assertj.core.api.Assertions.assertThat(item.get("student").get("level").asText()).isEqualTo("C");
+        JsonNode contact = item.get("contacts").get(0);
+        org.assertj.core.api.Assertions.assertThat(contact.get("primary").asBoolean()).isTrue();
+        org.assertj.core.api.Assertions.assertThat(contact.get("phone").asText()).isEqualTo("+216 20 111 222");
+        org.assertj.core.api.Assertions.assertThat(contact.get("preferredContactMethod").asText()).isEqualTo("WHATSAPP");
+        org.assertj.core.api.Assertions.assertThat(item.get("plan").get("occurrenceNumber").asLong()).isEqualTo(1);
+        org.assertj.core.api.Assertions.assertThat(item.get("plan").get("occurrenceCount").asInt()).isEqualTo(5);
+        org.assertj.core.api.Assertions.assertThat(item.get("lastCheckIn").isNull()).isTrue();
+
+        // Another day doesn't include it (weekly plan → next one is 7 days later).
+        String tomorrow = mockMvc.perform(get("/api/follow-ups/agenda")
+                        .header("Authorization", authHeader())
+                        .param("date", LocalDate.now().plusDays(1).toString()))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
+        org.assertj.core.api.Assertions.assertThat(tomorrow).doesNotContain(studentId);
+    }
+
+    @Test
+    void planWithOccurrenceCountGeneratesExactlyThatManyEvenPastTheRollingWindow() throws Exception {
+        String studentId = createStudent("Hana", "Rekik");
+        // 40 weekly check-ins span ~9 months, past the 6-month rolling window:
+        // a fixed-count plan is generated in full up front.
+        String response = mockMvc.perform(post("/api/follow-up-plans")
+                        .header("Authorization", authHeader())
+                        .contentType("application/json")
+                        .content(objectMapper.writeValueAsString(countedPlanBody(studentId, 40))))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.occurrenceCount").value(40))
+                .andReturn().getResponse().getContentAsString();
+        String planId = objectMapper.readTree(response).get("id").asText();
+
+        org.assertj.core.api.Assertions.assertThat(occurrencesOf(planId)).isEqualTo(40);
+
+        // Lowering the count on edit trims the not-yet-happened occurrences.
+        mockMvc.perform(put("/api/follow-up-plans/" + planId)
+                        .header("Authorization", authHeader())
+                        .contentType("application/json")
+                        .content(objectMapper.writeValueAsString(countedPlanBody(studentId, 10))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.occurrenceCount").value(10));
+        org.assertj.core.api.Assertions.assertThat(occurrencesOf(planId)).isEqualTo(10);
+
+        // Clearing it makes the plan ongoing again (rolling window, not 10).
+        ObjectNode ongoing = countedPlanBody(studentId, 1);
+        ongoing.putNull("occurrenceCount");
+        mockMvc.perform(put("/api/follow-up-plans/" + planId)
+                        .header("Authorization", authHeader())
+                        .contentType("application/json")
+                        .content(objectMapper.writeValueAsString(ongoing)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.occurrenceCount").doesNotExist());
+        org.assertj.core.api.Assertions.assertThat(occurrencesOf(planId)).isBetween(20L, 30L);
+    }
+
+    @Test
+    void occurrenceCountOutOfRangeIsRejected() throws Exception {
+        String studentId = createStudent("Zied", "Amri");
+        for (int bad : new int[] {0, 201}) {
+            mockMvc.perform(post("/api/follow-up-plans")
+                            .header("Authorization", authHeader())
+                            .contentType("application/json")
+                            .content(objectMapper.writeValueAsString(countedPlanBody(studentId, bad))))
+                    .andExpect(status().isBadRequest());
+        }
+    }
+
     @Test
     void creatingAMonthlyPlanGeneratesOccurrencesWithinTheRollingWindow() throws Exception {
         String studentId = createStudent("Nadia", "Cherif");

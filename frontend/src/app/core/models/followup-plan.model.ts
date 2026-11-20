@@ -56,6 +56,8 @@ export interface FollowUpPlan {
   active: boolean;
   nextFollowUpDate: string | null;
   reminderOffsets: ReminderOffset[];
+  /** Total number of check-ins; null = ongoing. */
+  occurrenceCount: number | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -75,7 +77,11 @@ export interface FollowUpPlanRequest {
   meetingType: MeetingType;
   reminderOffsets?: ReminderOffset[];
   active?: boolean;
+  occurrenceCount?: number | null;
 }
+
+/** Same bound the backend enforces (FollowUpPlanRequest.MAX_OCCURRENCE_COUNT). */
+export const MAX_OCCURRENCE_COUNT = 200;
 
 export const FREQUENCY_TYPES: FrequencyType[] = [
   'WEEKLY',
