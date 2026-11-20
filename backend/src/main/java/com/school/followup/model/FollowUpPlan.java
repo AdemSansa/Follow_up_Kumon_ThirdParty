@@ -91,6 +91,10 @@ public class FollowUpPlan {
     @Column(name = "next_follow_up_date")
     private LocalDate nextFollowUpDate;
 
+    /** Total number of check-ins this plan produces; null = ongoing. */
+    @Column(name = "occurrence_count")
+    private Integer occurrenceCount;
+
     @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable(name = "follow_up_plan_reminders", joinColumns = @JoinColumn(name = "follow_up_plan_id"))
     @Enumerated(EnumType.STRING)
@@ -243,6 +247,14 @@ public class FollowUpPlan {
 
     public void setNextFollowUpDate(LocalDate nextFollowUpDate) {
         this.nextFollowUpDate = nextFollowUpDate;
+    }
+
+    public Integer getOccurrenceCount() {
+        return occurrenceCount;
+    }
+
+    public void setOccurrenceCount(Integer occurrenceCount) {
+        this.occurrenceCount = occurrenceCount;
     }
 
     public Set<ReminderOffset> getReminderOffsets() {

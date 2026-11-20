@@ -11,6 +11,7 @@ import org.springframework.transaction.annotation.Transactional;
 import tools.jackson.databind.ObjectMapper;
 import tools.jackson.databind.node.ObjectNode;
 
+import java.time.LocalDate;
 import java.util.UUID;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
@@ -28,6 +29,12 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 @Transactional
 class FollowUpPlanIntegrationTest {
+
+    /**
+     * Always in the future, so nextFollowUpDate equals the start date. A
+     * hardcoded date breaks once it passes (the plan then rolls forward).
+     */
+    private static final String START_DATE = LocalDate.now().plusMonths(1).withDayOfMonth(1).toString();
 
     @Autowired
     private MockMvc mockMvc;
@@ -93,7 +100,7 @@ class FollowUpPlanIntegrationTest {
         createBody.put("studentId", studentId);
         createBody.put("parentId", parentId);
         createBody.put("frequencyType", "MONTHLY");
-        createBody.put("startDate", "2026-10-01");
+        createBody.put("startDate", START_DATE);
         createBody.put("preferredDay", "SATURDAY");
         createBody.put("preferredTime", "10:00:00");
         createBody.put("meetingDurationMinutes", 30);
@@ -108,7 +115,7 @@ class FollowUpPlanIntegrationTest {
                 .andExpect(jsonPath("$.student.firstName").value("Yanis"))
                 .andExpect(jsonPath("$.parent.firstName").value("Salma"))
                 .andExpect(jsonPath("$.active").value(true))
-                .andExpect(jsonPath("$.nextFollowUpDate").value("2026-10-01"))
+                .andExpect(jsonPath("$.nextFollowUpDate").value(START_DATE))
                 .andReturn().getResponse().getContentAsString();
         String planId = objectMapper.readTree(createResponse).get("id").asText();
 
@@ -153,7 +160,7 @@ class FollowUpPlanIntegrationTest {
         createBody.put("frequencyType", "CUSTOM");
         createBody.put("customIntervalValue", 10);
         createBody.put("customIntervalUnit", "DAYS");
-        createBody.put("startDate", "2026-10-01");
+        createBody.put("startDate", START_DATE);
         createBody.put("meetingType", "PHONE_CALL");
 
         mockMvc.perform(post("/api/follow-up-plans")
@@ -172,7 +179,7 @@ class FollowUpPlanIntegrationTest {
         ObjectNode createBody = objectMapper.createObjectNode();
         createBody.put("studentId", studentId);
         createBody.put("frequencyType", "CUSTOM");
-        createBody.put("startDate", "2026-10-01");
+        createBody.put("startDate", START_DATE);
         createBody.put("meetingType", "PHONE_CALL");
 
         mockMvc.perform(post("/api/follow-up-plans")
@@ -191,7 +198,7 @@ class FollowUpPlanIntegrationTest {
         createBody.put("studentId", studentId);
         createBody.put("parentId", unrelatedParentId);
         createBody.put("frequencyType", "WEEKLY");
-        createBody.put("startDate", "2026-10-01");
+        createBody.put("startDate", START_DATE);
         createBody.put("meetingType", "INTERNAL_REVIEW");
 
         mockMvc.perform(post("/api/follow-up-plans")
@@ -206,7 +213,7 @@ class FollowUpPlanIntegrationTest {
         ObjectNode createBody = objectMapper.createObjectNode();
         createBody.put("studentId", UUID.randomUUID().toString());
         createBody.put("frequencyType", "WEEKLY");
-        createBody.put("startDate", "2026-10-01");
+        createBody.put("startDate", START_DATE);
         createBody.put("meetingType", "INTERNAL_REVIEW");
 
         mockMvc.perform(post("/api/follow-up-plans")
@@ -224,7 +231,7 @@ class FollowUpPlanIntegrationTest {
         createBody.put("studentId", studentId);
         createBody.put("assignedStaffId", UUID.randomUUID().toString());
         createBody.put("frequencyType", "WEEKLY");
-        createBody.put("startDate", "2026-10-01");
+        createBody.put("startDate", START_DATE);
         createBody.put("meetingType", "INTERNAL_REVIEW");
 
         mockMvc.perform(post("/api/follow-up-plans")

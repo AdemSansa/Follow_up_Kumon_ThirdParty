@@ -3,6 +3,7 @@ package com.school.students.service;
 import com.school.auth.repository.UserRepository;
 import com.school.common.exception.BadRequestException;
 import com.school.common.exception.ResourceNotFoundException;
+import com.school.followup.repository.FollowUpRepository;
 import com.school.parents.model.Parent;
 import com.school.parents.repository.ParentRepository;
 import com.school.students.dto.StudentRequest;
@@ -33,12 +34,14 @@ public class StudentService {
     private final StudentRepository studentRepository;
     private final ParentRepository parentRepository;
     private final UserRepository userRepository;
+    private final FollowUpRepository followUpRepository;
 
     public StudentService(StudentRepository studentRepository, ParentRepository parentRepository,
-                           UserRepository userRepository) {
+                           UserRepository userRepository, FollowUpRepository followUpRepository) {
         this.studentRepository = studentRepository;
         this.parentRepository = parentRepository;
         this.userRepository = userRepository;
+        this.followUpRepository = followUpRepository;
     }
 
     public Page<Student> list(StudentStatus status, UUID assignedTeacherId, Subject subject, UUID parentId,
@@ -91,6 +94,13 @@ public class StudentService {
     @Transactional
     public void delete(UUID id) {
         Student student = get(id);
+        // Business rule 1: follow-up history is never deleted. A student with
+        // any follow-up on record is withdrawn (status change), not removed.
+        if (followUpRepository.existsByStudentId(id)) {
+            throw new BadRequestException(
+                    "Cannot delete a student with follow-up history — set their status to WITHDRAWN "
+                            + "or INACTIVE instead to preserve history.");
+        }
         studentRepository.delete(student);
     }
 

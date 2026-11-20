@@ -80,11 +80,49 @@
 
         <mat-form-field appearance="outline" class="student-form__full">
           <mat-label>Parents</mat-label>
-          <mat-select formControlName="parentIds" multiple>
-            @for (p of availableParents(); track p.id) {
-              <mat-option [value]="p.id">{{ p.firstName }} {{ p.lastName }}</mat-option>
+          <mat-chip-grid #parentChips aria-label="Parents linked to this student">
+            @for (p of selectedParents(); track p.id) {
+              <mat-chip-row (removed)="removeParent(p)">
+                {{ p.firstName }} {{ p.lastName }}
+                <button matChipRemove [attr.aria-label]="'Remove ' + p.firstName + ' ' + p.lastName">
+                  <mat-icon>cancel</mat-icon>
+                </button>
+              </mat-chip-row>
             }
-          </mat-select>
+            <input
+              #parentInput
+              [placeholder]="selectedParents().length ? 'Add another parent…' : 'Type a parent\'s name, phone or email…'"
+              [formControl]="parentSearch"
+              [matAutocomplete]="parentAuto"
+              [matChipInputFor]="parentChips"
+              (focus)="openParentSuggestions()"
+            />
+          </mat-chip-grid>
+          <mat-autocomplete
+            #parentAuto="matAutocomplete"
+            (optionSelected)="addParent($event.option.value, parentInput)"
+          >
+            @if (searchingParents()) {
+              <mat-option disabled>Searching…</mat-option>
+            }
+            @for (p of parentSuggestions(); track p.id) {
+              <mat-option [value]="p">
+                <span class="parent-option">
+                  <strong>{{ p.firstName }} {{ p.lastName }}</strong>
+                  <small>{{ p.relationship }}{{ p.phone ? ' · ' + p.phone : '' }}{{ p.email ? ' · ' + p.email : '' }}</small>
+                </span>
+              </mat-option>
+            }
+            @if (!searchingParents() && parentSuggestions().length === 0) {
+              <mat-option disabled>
+                {{ parentQuery() ? 'No parent matches “' + parentQuery() + '”' : 'No more parents to add' }}
+              </mat-option>
+            }
+          </mat-autocomplete>
+          <mat-hint>
+            Type to search, then pick from the suggestions. Not registered yet?
+            <a routerLink="/parents/new">Register a new parent</a>
+          </mat-hint>
         </mat-form-field>
 
         <mat-form-field appearance="outline" class="student-form__full">
@@ -124,6 +162,7 @@
                   <mat-icon matListItemIcon>event_repeat</mat-icon>
                   <span matListItemTitle>
                     {{ plan.frequencyType.replaceAll('_', ' ') }} · {{ plan.meetingType.replaceAll('_', ' ') }}
+                    · {{ plan.occurrenceCount ? plan.occurrenceCount + ' check-ins' : 'ongoing' }}
                     @if (!plan.active) {
                       <span class="student-form__plan-inactive">(inactive)</span>
                     }
@@ -186,7 +225,7 @@
                     @if (followUp.overdue) {
                       <span class="status-badge status-badge--overdue">OVERDUE</span>
                     }
-                    @if (followUp.status === 'COMPLETED') {
+                    @if (followUp.status === 'COMPLETED' && followUp.progressRating !== null) {
                       · Progress {{ followUp.progressRating }}/5 · Engagement {{ followUp.engagementRating }}/5 ·
                       Parent {{ followUp.parentSatisfactionRating }}/5
                     }

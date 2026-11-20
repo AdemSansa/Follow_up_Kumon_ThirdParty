@@ -59,9 +59,17 @@ step 1 running.
   discards its local token.
 - Roles: `ADMIN` (Administrator/Director), `STAFF` (Teacher/Follow-Up
   Staff) — see [../docs/PROJECT_SCOPE.md](../docs/PROJECT_SCOPE.md).
-- `/api/scheduling/**` is intentionally public/tokenless (parent
-  slot-scheduling links) — see
-  [../docs/features/parent-slot-scheduling.md](../docs/features/parent-slot-scheduling.md).
+- Method security is on (`@EnableMethodSecurity`): destructive operations
+  (`DELETE` on students and follow-up plans) are `ADMIN`-only.
+- `/api/scheduling/**` will be public/tokenless (parent slot-scheduling
+  links, see
+  [../docs/features/parent-slot-scheduling.md](../docs/features/parent-slot-scheduling.md)),
+  but it stays authenticated until that controller is built.
+- `GET /actuator/health` is public (no details); no other actuator
+  endpoints are exposed.
+- `CORS_ALLOWED_ORIGINS` (comma-separated, default `http://localhost:4200`)
+  sets which frontend origins may call the API. A `JWT_SECRET` shorter than
+  32 characters logs a startup warning.
 
 ## Students & Parents module (Sprint 2)
 

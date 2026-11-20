@@ -27,11 +27,13 @@ public record StudentResponse(
         UUID assignedTeacherId,
         Set<ParentResponse> parents,
         String notes,
+        /** When the profile photo last changed; null = no photo. Also used by the UI to refresh its cached image. */
+        Instant photoUpdatedAt,
         Instant createdAt,
         Instant updatedAt
 ) {
 
-    public static StudentResponse from(Student student) {
+    public static StudentResponse from(Student student, Instant photoUpdatedAt) {
         return new StudentResponse(
                 student.getId(),
                 student.getFirstName(),
@@ -48,6 +50,7 @@ public record StudentResponse(
                 student.getAssignedTeacherId(),
                 student.getParents().stream().map(ParentResponse::from).collect(Collectors.toSet()),
                 student.getNotes(),
+                photoUpdatedAt,
                 student.getCreatedAt(),
                 student.getUpdatedAt());
     }

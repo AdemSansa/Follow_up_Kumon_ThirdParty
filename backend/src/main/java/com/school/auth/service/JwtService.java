@@ -5,6 +5,8 @@ import com.school.auth.security.JwtProperties;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import javax.crypto.SecretKey;
@@ -25,10 +27,21 @@ import java.util.Optional;
 @Service
 public class JwtService {
 
+    private static final Logger log = LoggerFactory.getLogger(JwtService.class);
+    private static final int MIN_RECOMMENDED_SECRET_LENGTH = 32;
+
     private final SecretKey key;
     private final Duration expiration;
 
     public JwtService(JwtProperties properties) {
+        if (properties.secret() == null || properties.secret().isBlank()) {
+            throw new IllegalStateException("app.jwt.secret (JWT_SECRET) must be set");
+        }
+        if (properties.secret().length() < MIN_RECOMMENDED_SECRET_LENGTH) {
+            log.warn("JWT_SECRET is shorter than {} characters — fine for local dev, but anyone who guesses it "
+                    + "can forge tokens. Set a long random value before any non-local deployment.",
+                    MIN_RECOMMENDED_SECRET_LENGTH);
+        }
         this.key = deriveKey(properties.secret());
         this.expiration = Duration.ofMinutes(properties.expirationMinutes());
     }
@@ -56,6 +69,28 @@ public class JwtService {
 
     public Duration getExpiration() {
         return expiration;
+    }
+
+    /**
+     * Short-lived signed token for non-login purposes (e.g. the OAuth
+     * "state" parameter). It carries no "role" claim, so
+     * JwtAuthenticationFilter never accepts it as a login.
+     */
+    public String generatePurposeToken(String subject, String purpose, java.util.Map<String, String> claims,
+                                       Duration ttl) {
+        Instant now = Instant.now();
+        var builder = Jwts.builder()
+                .subject(subject)
+                .claim("purpose", purpose)
+                .issuedAt(Date.from(now))
+                .expiration(Date.from(now.plus(ttl)));
+        claims.forEach(builder::claim);
+        return builder.signWith(key).compact();
+    }
+
+    /** Claims of a valid, unexpired purpose token with the given purpose; empty otherwise. */
+    public Optional<Claims> parsePurposeToken(String token, String purpose) {
+        return parse(token).filter(c -> purpose.equals(c.get("purpose", String.class)) && c.get("role") == null);
     }
 
     /**

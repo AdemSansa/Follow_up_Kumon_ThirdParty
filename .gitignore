@@ -29,3 +29,6 @@ Thumbs.db
 
 # Logs
 *.log
+
+# Google service account keys and other credentials (never commit)
+secrets/

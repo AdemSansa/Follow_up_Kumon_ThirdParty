@@ -1,6 +1,7 @@
+import { environment } from '../../environments/environment';
+
 /**
- * API base URL. No build-time environment files yet (single dev target) —
- * swap this for Angular's fileReplacements-based environments.ts/prod.ts
- * once there's a real deployment target to point at.
+ * API base URL, set per build configuration in src/environments/
+ * (development → localhost:8080, production → same-origin /api).
  */
-export const API_BASE_URL = 'http://localhost:8080/api';
+export const API_BASE_URL = environment.apiBaseUrl;

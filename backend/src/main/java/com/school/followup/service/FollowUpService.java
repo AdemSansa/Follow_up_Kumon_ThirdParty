@@ -4,6 +4,7 @@ import com.school.common.exception.BadRequestException;
 import com.school.common.exception.ResourceNotFoundException;
 import com.school.followup.dto.FollowUpRequest;
 import com.school.followup.dto.RescheduleRequest;
+import com.school.followup.events.FollowUpEvents;
 import com.school.followup.model.FollowUp;
 import com.school.followup.model.FollowUpPlan;
 import com.school.followup.model.FollowUpStatus;
@@ -13,6 +14,7 @@ import com.school.parents.model.Parent;
 import com.school.parents.repository.ParentRepository;
 import com.school.students.model.Student;
 import com.school.students.repository.StudentRepository;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -20,6 +22,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 import static com.school.followup.repository.FollowUpSpecifications.hasAssignedStaff;
@@ -42,13 +45,16 @@ public class FollowUpService {
     private final FollowUpPlanRepository followUpPlanRepository;
     private final StudentRepository studentRepository;
     private final ParentRepository parentRepository;
+    private final ApplicationEventPublisher events;
 
     public FollowUpService(FollowUpRepository followUpRepository, FollowUpPlanRepository followUpPlanRepository,
-                            StudentRepository studentRepository, ParentRepository parentRepository) {
+                            StudentRepository studentRepository, ParentRepository parentRepository,
+                            ApplicationEventPublisher events) {
         this.followUpRepository = followUpRepository;
         this.followUpPlanRepository = followUpPlanRepository;
         this.studentRepository = studentRepository;
         this.parentRepository = parentRepository;
+        this.events = events;
     }
 
     /**
@@ -109,9 +115,12 @@ public class FollowUpService {
         if (!request.scheduledEnd().isAfter(request.scheduledStart())) {
             throw new BadRequestException("scheduledEnd must be after scheduledStart");
         }
+        LocalDateTime previousStart = followUp.getScheduledStart();
         followUp.setScheduledStart(request.scheduledStart());
         followUp.setScheduledEnd(request.scheduledEnd());
         followUp.setStatus(FollowUpStatus.RESCHEDULED);
+        // Moves the Google Meet event / tells the parent, after commit (see MeetingSyncListener).
+        events.publishEvent(new FollowUpEvents.Rescheduled(followUp.getId(), previousStart));
         return followUp;
     }
 
@@ -122,6 +131,7 @@ public class FollowUpService {
             throw new BadRequestException("Cannot cancel a follow-up that is already COMPLETED");
         }
         followUp.setStatus(FollowUpStatus.CANCELLED);
+        events.publishEvent(new FollowUpEvents.Cancelled(followUp.getId()));
         return followUp;
     }
 

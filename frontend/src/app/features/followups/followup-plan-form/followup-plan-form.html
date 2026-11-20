@@ -59,6 +59,23 @@
           </mat-form-field>
         </div>
 
+        <mat-form-field appearance="outline" class="plan-form__full plan-form__count">
+          <mat-label>Number of check-ins</mat-label>
+          <input
+            matInput
+            type="number"
+            min="1"
+            [max]="maxOccurrenceCount"
+            step="1"
+            formControlName="occurrenceCount"
+            placeholder="Ongoing"
+          />
+          <mat-hint>Leave empty to keep scheduling with no end. Enter a number (e.g. 10) for exactly that many.</mat-hint>
+          @if (form.controls.occurrenceCount.invalid) {
+            <mat-error>Enter a whole number from 1 to {{ maxOccurrenceCount }}.</mat-error>
+          }
+        </mat-form-field>
+
         <div class="plan-form__row">
           <mat-form-field appearance="outline">
             <mat-label>Preferred day</mat-label>

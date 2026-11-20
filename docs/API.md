@@ -22,6 +22,10 @@ PUT    /api/students/{id}
 DELETE /api/students/{id}
 ```
 
+`DELETE` is ADMIN-only (403 for STAFF) and returns 400 if the student has
+any follow-up history — set `status` to `WITHDRAWN`/`INACTIVE` instead
+(business rule 1).
+
 `GET /api/students` query params: `status`, `assignedTeacherId`, `subject`
 (`MATH`/`ENGLISH`), `parentId` (a parent's children — powers the "Add
 child" list on a parent's page, see
@@ -58,6 +62,9 @@ POST   /api/follow-up-plans
 PUT    /api/follow-up-plans/{id}
 DELETE /api/follow-up-plans/{id}
 ```
+
+`DELETE` is ADMIN-only (403 for STAFF) and returns 400 once the plan has
+generated any follow-ups — deactivate it instead.
 
 `GET` query params: `studentId`, `active`, `assignedStaffId`, plus standard
 paging.
@@ -146,7 +153,11 @@ POST /api/action-items/{id}/complete
 are created only through the check-in payload above; `complete` marks one
 `DONE` and stamps `completedAt`.
 
-## Parent Slot Scheduling (public, tokenless)
+## Parent Slot Scheduling (public, tokenless) — not built yet
+
+> Planned, not implemented. `/api/scheduling/**` is **not** opened in
+> `SecurityConfig` until the controller that validates single-use tokens
+> exists.
 
 ```http
 GET  /api/scheduling/{token}

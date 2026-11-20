@@ -31,6 +31,13 @@ public class GlobalExceptionHandler {
         return ResponseEntity.badRequest().body(body);
     }
 
+    @ExceptionHandler(org.springframework.web.multipart.MaxUploadSizeExceededException.class)
+    public ResponseEntity<ApiError> handleTooLarge(HttpServletRequest request) {
+        ApiError body = ApiError.of(HttpStatus.BAD_REQUEST.value(), "Bad Request",
+                "The file is too large — maximum 2 MB", request.getRequestURI());
+        return ResponseEntity.badRequest().body(body);
+    }
+
     @ExceptionHandler(BadRequestException.class)
     public ResponseEntity<ApiError> handleBadRequest(BadRequestException ex, HttpServletRequest request) {
         ApiError body = ApiError.of(HttpStatus.BAD_REQUEST.value(), "Bad Request", ex.getMessage(),

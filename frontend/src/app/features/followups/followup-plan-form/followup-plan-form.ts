@@ -17,11 +17,15 @@ import {
   DAYS_OF_WEEK,
   FREQUENCY_TYPES,
   INTERVAL_UNITS,
+  MAX_OCCURRENCE_COUNT,
   MEETING_TYPES,
   REMINDER_OFFSETS,
 } from '../../../core/models/followup-plan.model';
 import { Parent } from '../../../core/models/parent.model';
 import { ApiError } from '../../../core/models/api-error.model';
+import { UiFeedback } from '../../../core/services/ui-feedback.service';
+import { BackNavigation } from '../../../core/services/back-navigation.service';
+import { UnsavedChangesAware } from '../../../shared/unsaved-changes';
 
 function toIsoDate(value: Date | string | null): string | null {
   if (!value) return null;
@@ -48,12 +52,16 @@ function toIsoDate(value: Date | string | null): string | null {
   templateUrl: './followup-plan-form.html',
   styleUrl: './followup-plan-form.scss',
 })
-export class FollowUpPlanForm {
+export class FollowUpPlanForm extends UnsavedChangesAware {
   private readonly fb = inject(FormBuilder);
   private readonly planService = inject(FollowUpPlanService);
   private readonly studentService = inject(StudentService);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
+  private readonly ui = inject(UiFeedback);
+  private readonly backNav = inject(BackNavigation);
+  /** Plan's active state as loaded, to confirm before pausing it on save. */
+  private wasActive = true;
 
   readonly frequencyTypes = FREQUENCY_TYPES;
   readonly intervalUnits = INTERVAL_UNITS;
@@ -85,9 +93,26 @@ export class FollowUpPlanForm {
     meetingType: this.fb.nonNullable.control<(typeof MEETING_TYPES)[number]>('PARENT_MEETING', Validators.required),
     reminderOffsets: this.fb.nonNullable.control<string[]>(['TWENTY_FOUR_HOURS_BEFORE']),
     active: this.fb.nonNullable.control(true),
+    /** Empty = ongoing; a number = exactly that many check-ins in total. */
+    occurrenceCount: this.fb.control<number | null>(null, [
+      Validators.min(1),
+      Validators.max(MAX_OCCURRENCE_COUNT),
+      Validators.pattern(/^\d+$/),
+    ]),
   });
 
+  readonly maxOccurrenceCount = MAX_OCCURRENCE_COUNT;
+
+  /** Set after a successful save, so leaving afterwards doesn't warn. */
+  private saved = false;
+
+  /** Unsaved edits on this page? (used by unsavedChangesGuard and the tab-close warning) */
+  hasUnsavedChanges(): boolean {
+    return !this.saved && !this.saving() && this.form.dirty;
+  }
+
   constructor() {
+    super();
     if (this.isEditMode && this.planId) {
       this.loading.set(true);
       this.planService.get(this.planId).subscribe((plan) => {
@@ -107,7 +132,9 @@ export class FollowUpPlanForm {
           meetingType: plan.meetingType,
           reminderOffsets: plan.reminderOffsets,
           active: plan.active,
+          occurrenceCount: plan.occurrenceCount,
         });
+        this.wasActive = plan.active;
         this.loading.set(false);
       });
     } else if (this.presetStudentId) {
@@ -133,6 +160,24 @@ export class FollowUpPlanForm {
   }
 
   submit(): void {
+    if (this.isEditMode && this.wasActive && !this.form.controls.active.value && this.form.valid) {
+      this.ui
+        .confirm({
+          title: 'Pause this follow-up plan?',
+          message:
+            'You switched "Active" off. No new check-ins will be scheduled until you turn it back on. ' +
+            'Check-ins already on the calendar and past history are kept.',
+          confirmText: 'Save & pause',
+          danger: true,
+          icon: 'pause_circle',
+        })
+        .subscribe((ok) => ok && this.save());
+      return;
+    }
+    this.save();
+  }
+
+  private save(): void {
     if (!this.studentId) {
       this.errorMessage.set('No student context — open this from a student\'s page.');
       return;
@@ -158,6 +203,7 @@ export class FollowUpPlanForm {
       meetingType: raw.meetingType,
       reminderOffsets: raw.reminderOffsets as never,
       active: raw.active,
+      occurrenceCount: raw.occurrenceCount ? Number(raw.occurrenceCount) : null,
     };
 
     const save$ =
@@ -168,12 +214,16 @@ export class FollowUpPlanForm {
     save$.subscribe({
       next: () => {
         this.saving.set(false);
-        this.router.navigate(['/students', this.studentId]);
+        this.saved = true;
+        this.ui.success(this.isEditMode ? 'Follow-up plan saved' : 'Follow-up plan created — check-ins are on the calendar');
+        this.backNav.back(['/students', this.studentId]);
       },
       error: (err: HttpErrorResponse) => {
         this.saving.set(false);
         const apiError = err.error as ApiError | undefined;
-        this.errorMessage.set(apiError?.message ?? 'Could not save this follow-up plan.');
+        const message = apiError?.message ?? 'Could not save this follow-up plan.';
+        this.errorMessage.set(message);
+        this.ui.error(message);
       },
     });
   }

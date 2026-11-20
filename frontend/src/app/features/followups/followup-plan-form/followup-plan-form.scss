@@ -25,6 +25,11 @@
   width: 100%;
 }
 
+// Room for the two-line hint/error under "Number of check-ins".
+.plan-form__count {
+  margin-bottom: 1.25rem;
+}
+
 .plan-form__toggle {
   margin: 0.5rem 0 1rem;
 }

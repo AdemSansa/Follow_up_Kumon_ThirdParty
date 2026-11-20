@@ -34,6 +34,10 @@
   </mat-form-field>
 </div>
 
+@if (errorMessage(); as message) {
+  <p class="student-list__error" role="alert">{{ message }}</p>
+}
+
 @if (loading()) {
   <mat-progress-bar mode="indeterminate"></mat-progress-bar>
 }
@@ -41,7 +45,12 @@
 <table mat-table [dataSource]="students()" class="student-list__table">
   <ng-container matColumnDef="name">
     <th mat-header-cell *matHeaderCellDef>Name</th>
-    <td mat-cell *matCellDef="let s">{{ s.firstName }} {{ s.lastName }}</td>
+    <td mat-cell *matCellDef="let s">
+      <span class="student-list__name">
+        <app-student-avatar [studentId]="s.id" [photoUpdatedAt]="s.photoUpdatedAt" [name]="s.firstName" [size]="36" />
+        {{ s.firstName }} {{ s.lastName }}
+      </span>
+    </td>
   </ng-container>
 
   <ng-container matColumnDef="status">
@@ -75,9 +84,11 @@
   <ng-container matColumnDef="actions">
     <th mat-header-cell *matHeaderCellDef></th>
     <td mat-cell *matCellDef="let s">
-      <button mat-icon-button (click)="deleteStudent(s, $event)" aria-label="Delete student">
-        <mat-icon>delete</mat-icon>
-      </button>
+      @if (isAdmin()) {
+        <button mat-icon-button (click)="deleteStudent(s, $event)" aria-label="Delete student">
+          <mat-icon>delete</mat-icon>
+        </button>
+      }
     </td>
   </ng-container>
 
